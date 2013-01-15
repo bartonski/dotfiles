@@ -1,0 +1,40 @@
+#! /bin/bash
+
+set -x
+cmd="egrep $1 $HOME/bin/sites.txt"
+$cmd
+site_id=$( $cmd | awk '{print $2}')
+
+echo Incidents:
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query2
+set pagesize 0
+set long 10000
+set longchunksize 10000
+set linesize 10000
+column changenumber a5
+column status format a10
+column agencyname format a45
+select incidentnumber, agencyname, to_char( createddatetime, 'MM/DD/YYYY'), status, owner
+from fusion.incident
+where siteid = $site_id
+and status != 'Closed'
+and status != 'Duplicate'
+order by  createddatetime;
+query2
+
+echo Changes:
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query3
+set pagesize 0
+set long 10000
+set longchunksize 10000
+set linesize 10000
+column changenumber a5
+column status format a10
+column agencyname format a45
+select changenumber, agencyname, to_char( createddatetime, 'MM/DD/YYYY'), status, owner
+from fusion.change
+where siteid = $site_id
+and status != 'Closed'
+and status != 'Duplicate'
+order by  createddatetime;
+query3

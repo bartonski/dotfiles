@@ -1,0 +1,78 @@
+#! /usr/bin/perl -w
+
+use strict;
+use DBI;
+use Getopt::Long;
+
+my $sender = '';	# option variable with default value
+my $env_home = '';	# option variable with default value
+GetOptions (
+	'sender=s' => \$sender,
+	'env_home=s' => \$env_home
+	);
+
+$env_home ||= "/prep";
+print "\$env_home = $env_home\n";
+my $user="appriss";
+my $passwd="appriss";
+my $dbname;
+$dbname = $env_home =~ /prep/ ? "prep01.appriss.com" : "prod01.appriss.com";
+
+my $dbh;
+$dbh = DBI->connect("dbi:Oracle:$dbname", $user, $passwd) or die $dbh->errstr;
+
+my $sender_id = uc( $sender );
+my $site_id;
+my $agency;
+
+my $query6 = qq{
+select
+    to_char(r.resync_dt, 'YYYYMMDD'),
+    r.missed_release_cnt,
+    r.missed_book_cnt,
+    r.missed_transition_cnt,
+    r.missed_notification_cnt
+
+from
+	STDVINE.SV_AGENCY_CODE s,
+	answers.agency_resync r
+
+where
+	s.sender_id = '%s'
+	and r.agency_code_sid = s.agency_code_sid
+	and r.resync_dt =  (
+		select 
+			max (resyncdates.resync_dt)
+		from (
+			select 
+				subq_r.resync_dt 
+			from
+				STDVINE.SV_AGENCY_CODE subq_s,
+				answers.agency_resync subq_r
+			where
+				subq_s.sender_id = '%s' 
+				and subq_r.agency_code_sid = subq_s.agency_code_sid
+				and subq_r.update_mode_cd = 'NOUPDRS'
+		) resyncdates  
+	)
+};
+
+# Main
+
+my @agency_info;
+
+#while ( push @agency_info, $sth->fetchrow() )
+
+print "RESYNC INFO\n";
+my $sth6 = $dbh->prepare( sprintf $query6, $sender_id, $sender_id );
+$sth6->execute;	
+my ( $resync_dt, $mr, $mb, $mt, $mn);
+while ( ( $resync_dt, $mr, $mb, $mt, $mn) = $sth6->fetchrow() ) {
+	#printf $query6, $sender_id, $sender_id;
+	print "    Last Resync:......... $resync_dt\n";	
+	#print "    Missed Releases:..... $mr\n";	
+	#print "    Missed Books:........ $mb\n";	
+	#print "    Missed Transitions:.. $mt\n";	
+	#print "    Missed Notifications: $mr\n";	
+	#print "=" x 80 . "\n";
+}

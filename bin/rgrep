@@ -1,0 +1,26 @@
+if [ x"$1" == "x" ]
+then
+	file="./reform.ini"
+else
+	file=$1
+fi
+
+egrep '^FILE0'\
+'|^OUTFILE'\
+'|^INIFILE'\
+'|^ID\>'\
+'|INREC'\
+'|^ID\>'\
+'|^MAP_TO'\
+'|^FILE_LIST'\
+'|^FIELD.*'\
+'(\<OFFENDER_ID\>'\
+'|\<BOOK_NUMBER\>'\
+'|CUSTODY_STATUS'\
+'|RELEASE_REASON)' $file
+
+#egrep '^FILE0|^OUTFILE|^INIFILE' $*
+#egrep '^FILE0|^OUTFILE|^INIFILE|^ID\>|^FIELD.*(\<OFFENDER_ID\>|\<BOOK_NUMBER\>|CUSTODY_STATUS|RELEASE_REASON)' $*
+#grep '^OUTFILE' $*
+#grep '^INIFILE' $*
+#grep '^ID' $*

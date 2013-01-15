@@ -1,0 +1,251 @@
+#! /usr/bin/perl -w
+
+use strict;
+use DBI;
+use Getopt::Long;
+use CGI;
+
+my $c=new CGI;
+my $html=$c->header . $c->start_html('Agency Info') 
+my $sender = '';	# option variable with default value
+my $env_home = '';	# option variable with default value
+GetOptions (
+	'sender=s' => \$sender,
+	'env_home=s' => \$env_home
+	);
+
+$env_home ||= "/prep";
+$html .=  $c->p("\$env_home = $env_home");
+my $user="appriss";
+my $passwd="appriss";
+my $dbname;
+$dbname = $env_home =~ /prep/ ? "prep01.appriss.com" : "prod01.appriss.com";
+
+
+my $dbh;
+$dbh = DBI->connect("dbi:Oracle:$dbname", $user, $passwd) or die $dbh->errstr;
+
+# Unix directory.
+sub unixDir {
+	my ($dir, $subdir) = @_;
+	$dir =~ s|\\|/|g; 
+	$subdir = $subdir ? "/$subdir" : "";
+	return "$env_home/$dir$subdir";
+}
+
+my $sender_id;
+my $site_id;
+my $agency;
+
+my $query1 =qq{
+        select sender_id, site_id, agency
+        from STDVINE.SV_AGENCY_CODE
+        where sender_id like upper('%s%%')
+};
+
+my $query2 =qq{
+select 
+	s.directory_path, 
+	s.sub_directory_path,
+	s.site_name,
+	s.agency_desc
+from
+	stdvine.sv_agency_code a,
+	answers.se_dashboard_all_agency_vw s
+where
+	a.site_id = %s
+	and a.site_id = s.site_id
+	and a.agency = %s
+	and a.agency = s.agency
+};
+
+my $query3 =qq{
+select 
+	a.avg_population,
+	a.bed_cnt
+from
+	stdvine.sv_agency_code a
+where
+	a.sender_id = '%s'
+};
+
+my $query4 =qq{
+select count(*)
+from 
+   stdvine.name n, stdvine.offender o
+where n.site_id = o.site_id
+   and n.site_id = %s
+   and n.agency = o.agency
+   and n.agency = %s
+   and n.linkage_sid = o.offender_sid
+   -- and o.custody_status_cd = 1
+   and n.alias_name_flg = 0
+having count(*) > 1
+group by n.fname, n.lname, o.dob
+order by n.lname
+};
+
+my $query5 =qq{
+select n.fname,
+       n.lname,
+       o.dob,
+       count(*)
+from 
+   stdvine.name n, stdvine.offender o
+where n.site_id = o.site_id
+   and n.site_id = %s
+   and n.agency = o.agency
+   and n.agency = %s
+   and n.linkage_sid = o.offender_sid
+   -- and o.custody_status_cd = 1
+   and n.alias_name_flg = 0
+having count(*) > 1
+group by n.fname, n.lname, o.dob
+order by n.lname
+};
+
+my $query6 = qq{
+select
+    to_char(r.resync_dt, 'YYYY-MM-DD HH24:MI:SS'),
+    r.missed_release_cnt,
+    r.missed_book_cnt,
+    r.missed_transition_cnt,
+    r.missed_notification_cnt
+
+from
+	STDVINE.SV_AGENCY_CODE s,
+	answers.agency_resync r
+
+where
+	s.sender_id = '%s'
+	and r.agency_code_sid = s.agency_code_sid
+	and r.resync_dt =  (select
+    max (resyncdates.resync_dt)
+from
+	(select subq_r.resync_dt from
+	STDVINE.SV_AGENCY_CODE subq_s,
+	answers.agency_resync subq_r
+where
+	subq_s.sender_id = '%s' 
+	and subq_r.agency_code_sid = subq_s.agency_code_sid
+	) resyncdates  )
+};
+
+# Main
+
+my $sth = $dbh->prepare( sprintf $query1, $sender );
+$sth->execute;
+
+my @agency_info;
+
+#while ( push @agency_info, $sth->fetchrow() )
+while ( ($sender_id, $site_id, $agency) = $sth->fetchrow() )
+{
+	my $sth2 = $dbh->prepare( sprintf $query2, $site_id, $agency );
+	$sth2->execute;	
+	my( $directory_path, $sub_directory_path, $site_name, $agency_desc);
+	while ( ( $directory_path, $sub_directory_path, $site_name, $agency_desc ) = $sth2->fetchrow() ) {
+		my $unixdir = unixDir($directory_path, $sub_directory_path);
+		if ( -d $unixdir ){
+			$html .=  $c->p "BASIC AGENCY INFORMATION\n";
+			$html .=  $c->p "    sender id: ". lc($sender_id);
+			$html .=  $c->p ", site_id: $site_id, agency number: $agency\n";
+			$html .=  $c->p "    " . unixDir($directory_path, $sub_directory_path) . "\n";	
+			$html .=  $c->p "    $site_name\n";	
+			$html .=  $c->p "    $agency_desc\n";	
+			my $sth3 = $dbh->prepare( sprintf $query3, $sender_id );
+			$sth3->execute;	
+			my( $avg_population, $bed_cnt);
+			while ( ( $avg_population, $bed_cnt) = $sth3->fetchrow() ) {
+				$html .=  $c->p "    Average population: $avg_population\n";	
+				$html .=  $c->p "    Bed Count: $bed_cnt\n";	
+			}
+			
+			
+			if( -f glob("$unixdir/archive/*") ){
+				$html .=  $c->p "    Most recent file in $unixdir/archive/:\n";
+				$html .=  $c->p "      ";
+				$html .=  $c->p `ls -lart $unixdir/archive/* | grep -v "^d"| tail -1`;
+			} else {
+				$html .=  $c->p "    THERE ARE NO FILES IN $unixdir/archive!!\n";
+			}
+
+			unless( -d glob("$unixdir/archive/svphoto/") &&
+			        -f glob("$unixdir/archive/svphoto/*") ){
+
+				$html .=  $c->p "    There are no files in $unixdir/archive/svphoto.\n";
+			}
+			$html .=  $c->p "    Possible Problems:\n";
+			$html .=  $c->p "     Y[] N[] Customizer files differ between prep and prod\n";
+			$html .=  $c->p "     Y[] N[] Conflicting tickets open: ______________\n";
+
+			my $has_dup = 0;
+			my $count;
+			my $sth4 = $dbh->prepare( sprintf $query4, $site_id, $agency );
+			$sth4->execute;
+			while ( ( $count ) = $sth4->fetchrow() ) {
+				$has_dup = 1 if( $count > 1);
+				last;
+			}
+			if( $has_dup ) {
+				$html .=  $c->p "=" x 80 . "\n";
+				$html .=  $c->p "AGENCY HAS DUPLICATE OFFENDERS\n";
+				$html .=  $c->p "Use the following query to find them:\n";
+				$html .=  $c->p "=" x 80 . "\n\n";
+				$html .=  $c->p "$query5\n", $site_id, $agency;
+				$html .=  $c->p "=" x 80 . "\n";
+			}
+
+			if( -f "$unixdir/ftphome/reform.ini"){
+				$html .=  $c->p "REFORM.INI\n";
+				$html .=  $c->p "    $unixdir/ftphome/reform.ini\n";
+				open( REFORM, "$unixdir/ftphome/reform.ini");
+				while(<REFORM>){
+					$html .=  $c->p "    " . $_ if(/^(FILE\d\d|OUTFILE|INFILE)/);
+				}
+				$html .=  $c->p "=" x 80 . "\n";
+			}
+			$html .=  $c->p "RESYNC INFO\n";
+			my $sth6 = $dbh->prepare( sprintf $query6, 
+			                          $sender_id, $sender_id );
+			$sth6->execute;	
+			my ( $resync_dt, $mr, $mb, $mt, $mn);
+			while ( ( $resync_dt, $mr, $mb, $mt, $mn) = $sth6->fetchrow() ) {
+				#printf $query6, $sender_id, $sender_id;
+				$html .=  $c->p "    Last Resync:......... $resync_dt\n";	
+				$html .=  $c->p "    Missed Releases:..... $mr\n";	
+				$html .=  $c->p "    Missed Books:........ $mb\n";	
+				$html .=  $c->p "    Missed Transitions:.. $mt\n";	
+				$html .=  $c->p "    Missed Notifications: $mr\n";	
+				$html .=  $c->p "=" x 80 . "\n";
+			}
+			
+			$html .=  $c->p "CUSTOMIZER\n";
+			my $datapath = unixDir($directory_path, "data");
+			my $cmd = "grep \"^$agency,\" $datapath/datasource.tbl | cut -d ',' -f2";
+			my $recfile = `$cmd`;
+			$recfile =~ s/\r//;
+			open( CUSTOMIZER, "/usr/local/bin/pc $datapath $recfile |");
+			$html .=  $c->p "    recfile=$recfile\n";
+			while(<CUSTOMIZER>){
+				chomp;
+				if(/(\.trn|OID|Custody Status|TR Agency|IC Facility|OC Reason|UC Reason)/ ){
+					my @tmp = split("      ");
+					unless( $tmp[2] eq '0' && $tmp[3] eq '0'  ){
+						$html .=  $c->p join( "\t", @tmp ) . "\n";
+					}
+				}
+			}
+			close CUSTOMIZER;
+			$html .=  $c->p "=" x 80 . "\n";
+			$html .=  $c->p "\nSITE EXPLORER\n";
+                	$html .=  $c->p "http://prodmon01.prod.appriss.com/siteexplorer";
+			$html .=  $c->p "/frames.jsp?siteId=$site_id&agency=$agency\n";
+			$html .=  $c->p "http://prepwebtools02.prep.appriss.com:9500/siteexplorer";
+			$html .=  $c->p "/frames.jsp?siteId=$site_id&agency=$agency\n\n";
+
+		}
+	}
+}
+
+# splice ( $sender_id, $site_id, $agency) from 

@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# scpall
+#
+# Copy a file to the same location on all (relevant) Appriss servers.
+# Most useful for installing SSH keys or local shell scripts under your user account.
+#
+# Usage: scpall <file1 file2 ... fileN> <server path/filename>
+#
+
+# prepaftp02.prep.appriss.com not working, no user acct 8/2/2011
+# prepimpt02.prep.appriss.com not working
+
+#        prepaadapt01.prep.appriss.com
+#        prodaadapt01.prod.appriss.com
+#        prodaadapt02.prod.appriss.com
+
+servers=`cat <<-END
+	prepaftpproc01.prep.appriss.com
+	prodaftpproc01.prod.appriss.com
+	prodaftpproc02.prod.appriss.com
+        prepftp01.prep.appriss.com
+        prodftp01.prod.appriss.com
+        prodftp02.prod.appriss.com
+	prepimpt01.prep.appriss.com
+	prodimpt01.prod.appriss.com
+	prodimpt02.prod.appriss.com
+END
+`
+
+# 'for' loops over script arguments by default, leaving the last arg in $last
+for last; do true; done
+
+# Join the source filenames together, skip last argument (destination)
+src_files=`perl -e 'pop(); print join(" ", @ARGV);' $@`
+
+for i in $servers
+do
+        printf "%35s" "$i: "
+	scp -oConnectTimeout=10 $src_files $i:$last
+	echo
+done

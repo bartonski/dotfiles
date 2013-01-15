@@ -1,0 +1,16 @@
+#! /bin/sh
+FILE="$HOME/tmp/next_action.txt"
+echo "Title:" > $FILE
+echo "$1" >> $FILE
+echo "----" >> $FILE
+cat >> $FILE
+cat << END >> $FILE
+
+----
+This page is a member of 
+* [BartonNextAction]
+
+----
+END
+
+cat $FILE

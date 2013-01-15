@@ -1,0 +1,13 @@
+read -p "Project: "
+DATE=`date +%Y%m%d%H%M%S`
+FILE="$HOME/projects/timesheets/$REPLY.$DATE.txt"
+echo -n "Project Name: $REPLY " > $FILE
+(grep $REPLY "$HOME/.project" | awk '{print $1}' >> $FILE) || echo "" >> $FILE
+for i in Site Fudge Notes
+do
+	prompt="$i: "
+	read -p "$prompt"
+	echo "$prompt $REPLY" >> $FILE
+done
+echo "==============================="
+cat $FILE

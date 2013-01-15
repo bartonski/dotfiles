@@ -1,0 +1,2 @@
+#! /bin/bash
+printcust $1 | perl -ne 'if( /(\b\d+\.(_|trn|rec)\w*\b)/ ){print "$1\n";}' | sort -u

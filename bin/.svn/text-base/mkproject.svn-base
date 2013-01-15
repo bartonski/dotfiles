@@ -1,0 +1,14 @@
+#! /bin/bash
+echo "Usage: $0 SENDERID JIRA-NUMBER SVNPATH"
+cd $ie
+senderid=${1}
+jirano=${2}
+svnurl=${3}
+basedir="${senderid}_pif${jirano}"
+mkdir -p $basedir/{snapshot,prodtree,reseach,data,vendortree}
+cd $basedir/vendortree
+if [ -n $svnurl ]
+then
+    svn co $svnurl
+fi
+echo "cd $ie/$basedir" | $CLIPCOPY

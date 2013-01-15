@@ -1,0 +1,16 @@
+#!/bin/sh
+tempfile="/tmp/$(basename $0).$$.tmp"
+echo "tempfile = $tempfile"
+
+for dir in "${*}" 
+do
+    find $dir -type f -print0 | xargs -0 shasum
+done | sort > $tempfile
+
+for sum in $( awk '{print $1}' $tempfile | uniq -c | grep -v '^ \+1' | awk '{print $2}' ) 
+do
+    echo "== $sum =="
+    grep $sum $tempfile | cut -d ' ' -f 2-
+done
+
+rm $tempfile

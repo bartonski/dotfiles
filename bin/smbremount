@@ -1,0 +1,8 @@
+#! /bin/bash
+for i in $(grep smbfs /etc/fstab | awk '{print $2}')
+do
+	echo "Unmounting $i ..."
+	sudo umount $i
+	echo "Remounting $i ..."
+	sudo mount $i
+done

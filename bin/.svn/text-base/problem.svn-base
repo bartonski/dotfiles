@@ -1,0 +1,42 @@
+#! /bin/bash
+echo
+echo
+echo -n Change:
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query1
+set pagesize 0
+set long 10000 
+set longchunksize 130 
+set linesize 130 
+select p.problemnumber
+     , p.subject
+     , p.description
+     , p.errormessage
+from fusion.problem p
+where p.problemnumber = $1;
+query1
+printf "===================="
+printf "===================="
+printf "===================="
+printf "====================\n"
+echo Journal Notes:
+echo
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query2
+set pagesize 0
+set long 10000 
+set longchunksize 130 
+set linesize 130 
+column j.subject format a20
+column j.notesbody format a130
+select
+ to_char(j.createddatetime, 'MM/DD/YYYY HH24:MI:SS')
+ , j.subject 
+ , j.notesbody
+ , '______________________________'
+from
+ FUSION.JOURNAL j,
+ FUSION.problem p
+where p.problemnumber = $1
+  and p.recid = j.parentlink_recid
+order by j.CREATEDDATETIME;
+query2
+

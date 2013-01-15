@@ -1,0 +1,72 @@
+#! /usr/bin/perl -w
+
+use Getopt::Long;
+use strict;
+
+my $dir = '';        # option variable with default value
+GetOptions (
+        'directory=s' => \$dir
+);
+
+$dir ||= ".";
+
+my $logdir=$dir;
+my @logfiles=glob("$logdir/*.log");
+my %current = ( "RELE" => {} , "TRAN" => {}, "BOOK" => {} );
+my %last = ( "RELE" => {} , "TRAN" => {}, "BOOK" => {} );
+
+foreach my $log (@logfiles) {
+	my $in_rptmode = 0;
+	my $report_resync_ran = 0;
+	my @sections = ();
+	my $section_number = 0;
+
+	open(LOG, $log);
+	while(<LOG>){
+		if( $in_rptmode ){
+			if( /END import/ ) {
+				$in_rptmode = 0;
+				$section_number++;
+				next;
+			} 
+			push @{$sections[$section_number]}, $_;
+		} elsif ( /RESYNC:Yes  REPORT:Yes/ ){
+			$sections[ $section_number ] = []; # add anonymous array.
+			$in_rptmode = 1;
+			$report_resync_ran = 1;
+		}
+	}
+	close LOG;
+	
+	my $secnum = 0;
+	foreach my $ref (@sections) {
+		my @section = @$ref;
+		$secnum++;
+		foreach my $line ( @section ){
+			foreach my $key ( keys %current ) {
+				if( $line =~ /$key/ ){
+					my @tmp = split '\s+', $line;
+					my $oid = $tmp[3];
+					$current{$key}{$oid}=1;
+				}
+			}
+		}
+		print "<p><h1> $log == $secnum == </h1></p>\n";
+		foreach my $key ( keys %current ) {
+			print "<h2> Missed $key </h2></p>\n";
+			print "<p>";
+			my $separator="";
+			foreach my $oid ( sort keys %{$current{$key}} ) {
+				unless( $last{$key}{$oid} && $last{$key}{$oid} ne "" ){
+					print "$separator'$oid'";
+					$separator=", ";
+				}
+			}
+			print "</p>\n";
+			if($report_resync_ran){
+				$last{$key} = $current{$key};
+				$current{$key} = {};
+			}
+		}
+	}
+}

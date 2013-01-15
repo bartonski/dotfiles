@@ -1,0 +1,36 @@
+#! /usr/bin/perl -w
+
+use strict;
+
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time - 15724800);
+
+$year = sprintf "%02d", $year % 100;
+
+my @months = ( "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT",
+	       "NOV", "DEC" );
+$mon = $months[$mon];
+
+$mday = sprintf "%02d", $mday % 100;
+
+my $sender_id = $ARGV[0];
+
+open(SEDATA, "$ENV{HOME}/bin/se.data");
+
+while(<SEDATA>){
+	chomp;
+	if(/$sender_id/i){
+		my ($si, $site_id, $agency) = split( ',', $_);
+		$si = lc($si);
+		print "\n";
+
+		print "-- query image_link_pending_vw for $si over the last six months\n";
+		print "select p.CREATION_TS \n";
+		print "from IMGLINK.IMAGE_LINK_PENDING_VW p \n";
+		print "where \n";
+		print "  p.site_id = $site_id and \n";
+		print "  p.agency = $agency and \n";
+		print "  p.CREATION_TS > '$mday-$mon-$year' \n";
+		print "\n";
+	}
+}
+

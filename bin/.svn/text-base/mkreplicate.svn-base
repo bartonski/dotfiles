@@ -1,0 +1,15 @@
+#! /usr/bin/perl
+unless( scalar @ARGV >= 2 ){
+    print "Usage: $0 SENDERID FILEMASK1 <FILEMASK2 ... >\n";
+    print "       Each FILEMASK may contain UNIX wild cards\n";
+    exit 1;
+}
+my $sender = $ARGV[0];
+for(my $i = 1; $i < scalar @ARGV; $i++){
+	print "filemask.$i=$ARGV[$i]\n";
+}
+print "TargetEnv=/prep\n";
+my $vinepath = `vinepath $sender`;
+chomp $vinepath;
+my @targetdir=split '\|', $vinepath;
+print "TargetDir=/$targetdir[0]$targetdir[1]/ftphome/\n";

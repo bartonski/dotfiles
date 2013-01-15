@@ -1,0 +1,39 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+use File::stat;
+use Time::Local;
+
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime( time );
+
+ $sec = 0;
+ $min = 0;
+$hour = 0;
+
+# calculate 00:00:00 today.
+my $midnight = timelocal($sec,$min,$hour,$mday,$mon,$year);
+
+my $days_back = $ARGV[0];
+my $filename_pattern = $ARGV[1];
+my $one_day = 60*60*24;
+my $filetime = $midnight - $one_day * $days_back;
+
+# create timestamp from $filetime.
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime( $filetime );
+$year += 1900;
+$mon++;
+my $timestamp = sprintf("%04d%02d%02d", $year, $mon, $mday);
+
+# create filename from $filename_pattern and timestamp.
+my $filename = sprintf( $filename_pattern, $timestamp );
+
+# create file if it does not already exist
+unless( -e $filename ){
+	open( FILE, ">>", $filename );
+	close( FILE );
+}
+
+# change atime and mtime on file.
+utime $filetime, $filetime, $filename;

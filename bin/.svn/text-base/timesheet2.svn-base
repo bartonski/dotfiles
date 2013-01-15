@@ -1,0 +1,405 @@
+#! /usr/bin/perl -w
+use strict;
+use YAML qw(LoadFile);
+use DBI;
+use Getopt::Long;
+
+
+################################################################################
+# Constants
+################################################################################
+
+my @column = (
+    "idx"
+    , "Start_Time"
+    , "End_Time"
+    , "Duration"
+    , "Project"
+    , "Ticket_Number"
+    , "Site"
+    , "Notes"
+    #, "foo"
+);
+
+my %column_type = (
+    "idx" => "INTEGER PRIMARY KEY AUTOINCREMENT"
+    , "Start_Time" => "VARCHAR"
+    , "End_Time" => "VARCHAR"
+    , "Duration" => "INTEGER"
+    , "Project" => "VARCHAR"
+    , "Ticket_Number" => "VARCHAR"
+    , "Site" => "VARCHAR"
+    , "Notes" => "VARCHAR"
+    #, "foo" => "foo"
+);
+
+my $DEBUG = 0;
+
+################################################################################
+# Sub Routines
+################################################################################
+
+sub debug {
+    my $cmd = shift;
+    print("    [$cmd]\n") if( $DEBUG );
+}
+
+sub create_timesheet {
+    my $dbh = shift;
+    my $column_ref = shift;
+    my @column = @$column_ref;
+    my $column_type_ref = shift;
+    my %column_type = %$column_type_ref;
+    my $initial_comma = "";
+    my $create_string = "";
+    foreach my $column (@column) {
+      	$create_string .= "$initial_comma $column $column_type{$column}";
+        $initial_comma = ',';
+    }
+    my $create = "CREATE TABLE timesheet($create_string); ";
+    my $sth = $dbh->prepare($create);
+    debug("$create\n");
+    debug("(@_)\n");
+    my $rv = $sth->execute();
+    debug("sql return value: $rv");
+    $dbh->disconnect;
+}
+
+sub insert_timesheet {
+    my $dbh = shift;
+    my $entryref = shift;
+    my $insertme = join(',', @_);
+    my $values_template = '?, ' x scalar(@_);
+
+    chop $values_template;
+    chop $values_template; #remove trailing comma
+
+    my $insert = "INSERT INTO timesheet( $insertme ) VALUES ( $values_template );";
+    my $sth = $dbh->prepare($insert);
+      debug("$insert");
+    my @values;
+    foreach my $entry (@_){
+        push @values, $$entryref{$entry}
+    }
+      debug("@values");
+    my $rv = $sth->execute( @values ) or die $dbh->errstr;
+      debug("sql return value: $rv");
+    $dbh->disconnect;
+}
+
+sub weekday {
+    return (
+        "Sunday",   "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+    )[shift];
+}
+
+sub timestamp {
+    my $starttime = shift;
+    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
+      localtime($starttime);
+    $year += 1900;
+
+    sprintf "%s, %4d-%02d-%02d, %02d:%02d:%02d", weekday($wday), $year,
+      $mon + 1, $mday, $hour, $min, $sec;
+}
+
+sub sqlitetimestamp {
+    my $starttime = shift;
+    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
+      localtime($starttime);
+    $year += 1900;
+
+    sprintf "'%4d-%02d-%02d %02d:%02d:%02d'", $year, $mon + 1, $mday, $hour,
+      $min, $sec;
+}
+
+sub display {
+    print 
+        weekday( $_[0] )   . "|"
+        . ( $_[1] )        . "|"
+        . weekday( $_[2] ) . "|"
+        . ( $_[3] )        . "|"
+        . ( $_[4] )        . "|"
+        . ( $_[5] )        . "|"
+        . ( $_[6] )        . "|"
+        . ( $_[7] )        . "|"
+        . ( $_[8] )        . "\n"
+}
+
+sub query {
+    my $dbh       = shift;
+    my $weeks_ago = shift;
+    for ( my $week = $weeks_ago ; $week > 0 ; $week-- ) {
+        my $start = $week * 7;
+        my $stop  = $start - 7;
+        my $q     = qq{
+		select
+			strftime( '%w', Start_Time, 'unixepoch', 'localtime' ) as start_day
+			, datetime(Start_Time, 'unixepoch', 'localtime') as start_timestamp
+			, strftime( '%w', End_Time, 'unixepoch', 'localtime' ) as end_day
+			, datetime(End_Time, 'unixepoch', 'localtime') as end_timestamp
+			, Project
+                        , Ticket_Number
+			, Site
+			, Duration
+			, (Duration/60.0) as duration_hours
+		from
+			timesheet
+		where
+			start_time > 
+				strftime('%s', 'now', 'localtime', '-$start days', 'weekday 0')
+			and end_time < 
+				strftime('%s', 'now', 'localtime', '-$stop days', 'weekday 0');
+		};
+        my $s = $dbh->prepare($q);
+        if ( !$s ) { print "\$s is not defined!\n" }
+        my @row;
+        $s->execute();
+	print join( '|', @{$s->{NAME}} ) . "\n";
+        while ( @row = $s->fetchrow_array() ) {
+            display(@row);
+        }
+    }
+}
+
+sub calctimes {
+    my $fudge     = shift;
+    my $starttime = shift;
+    my $endtime   = shift;
+    debug("calctimes( $fudge, $starttime, $endtime)");
+    debug("  fudge: $fudge");
+    debug("  Before fudge calculation");
+    debug("    starttime: $starttime");
+
+    if ( $fudge > 0 ) {
+        $starttime -= ( $fudge * 60 );
+        $endtime = time;
+    }
+    else {
+        debug "    starttime1: $starttime";
+        $endtime = time + ( $fudge * 60 );
+        debug "    starttime2: $starttime";
+    }
+
+    debug("  After fudge calculation:");
+    debug("    starttime: $starttime");
+    debug("    endtime: $endtime");
+    debug("    difference: " . ($endtime - $starttime) );
+
+    return ( $starttime, $endtime, ( $endtime - $starttime ) / 60 );
+}
+
+sub configure {
+    my $hashref = shift;
+    my %c       = %$hashref;
+    $c{'praisefile'} = "";
+    $c{'query'}      = undef;
+    $c{'end'}        = time();
+    $c{'start'}      = $c{'end'} - ( 7 * 24 * 60 * 60 );
+    $c{'weeks_ago'}  = 1;
+    my $result = GetOptions(
+        "debug"        => \$DEBUG,
+        "praisefile=s" => \$c{'praisefile'},
+        "conf=s"       => \$c{'conf'},
+        "query"        => \$c{'query'},
+        "end=i"        => \$c{'end'},
+        "weeks-ago=i"  => \$c{'weeks_ago'},
+        "start=i"      => \$c{'start'},
+        "create-db=s"  => \$c{'create-db'}
+    );
+
+    my $home = $ENV{'HOME'} ? $ENV{'HOME'} : $ENV{'USERNAME'};
+    $c{'conf'} ||= "$home/.timesheet/.timesheet";
+    my $config = LoadFile( $c{'conf'} );
+    debug "$$config{db}";
+    debug "$$config{file}";
+    debug "$$config{tempfile}";
+    debug "$$config{editor}";
+    foreach my $key ( keys %$config ) {
+        $c{ $key } = $$config{ $key };
+    }
+    $c{'db'} = $c{'create-db'} if defined $c{'create-db'};
+    $c{'Start_Time'} = time;
+    unless( $DEBUG ){
+    	$c{'tempfile'}  = "$$config{tempfile}" . $c{'Start_Time'} . ".tmp";
+    } else {
+        $c{'tempfile'} = './.debug_tempfile.tmp';
+    }
+
+    my $connection = "DBI:SQLite:dbname=$c{'db'}";
+    debug("DBI:SQLite:dbname=$c{'db'}");
+    $c{dbh} = DBI->connect( $connection, "", "" ) or die $DBI::errstr;
+
+    return %c;
+}
+
+sub singlequote {
+    return "'$_[0]'";
+}
+
+# Entry --
+## 'duration'
+## 'endtime'
+## 'project'
+## 'site'
+## 'starttime'
+# 'start'
+# 'fudge'
+# 'end'
+
+sub get_data {
+    my ( $confref, $entryref ) = @_;
+    my %c     = %$confref;
+    my %entry = %$entryref;
+
+    $entry{'end'}       = sqlitetimestamp( $c{'end'} );
+    $entry{'start'}     = sqlitetimestamp( $c{'start'} );
+    $entry{'Start_Time'} = $c{'Start_Time'};
+
+    debug("Start_Time: $entry{'Start_Time'}");
+    unless( $DEBUG ){
+	    open( TEMPFILE, ">$c{'tempfile'}" );
+
+	    print TEMPFILE timestamp( $entry{'Start_Time'} ) . "\n";
+	    print TEMPFILE "Project: \n";
+	    print TEMPFILE "Ticket Number: \n";
+	    print TEMPFILE "Site: \n";
+	    print TEMPFILE "Fudge: \n";
+	    print TEMPFILE "Notes: \n";
+
+	    close TEMPFILE;
+            system("$c{editor} $c{'tempfile'}");
+    }
+
+    open( TEMPFILE, "$c{'tempfile'}" );
+    while (<TEMPFILE>) {
+        if (/^Project: (.*)$/) {
+            $entry{'Project'} = $1;
+        }
+        elsif (/^Ticket Number: (.*)$/) {
+            $entry{'Ticket_Number'} = $1;
+        }
+        elsif (/^Site: (.*)$/) {
+            $entry{'Site'} = $1;
+        }
+        elsif (/^Notes: (.*)$/) {
+            $entry{'Notes'} = $1;
+        }
+        elsif (/^Fudge: (\-*\d+)/) {
+            $entry{'fudge'} = int $1;
+            last;
+        }
+    }
+    close TEMPFILE;
+
+    $entry{'idx'} = 'null';
+    $entry{'Project'} = singlequote $entry{'Project'};
+    $entry{'Ticket_Number'} = singlequote $entry{'Ticket_Number'};
+    $entry{'Site'}    = singlequote $entry{'Site'};
+    $entry{'Notes'}    = singlequote $entry{'Notes'};
+    $entry{'fudge'} ||= "0";
+    debug("fudge after '||=' $entry{'fudge'}");
+
+    my $cmd = "cat $c{'tempfile'} >> $c{'file'}";
+
+    system "$cmd";
+
+    unlink $c{'tempfile'} unless( $DEBUG );
+
+    ( $entry{'Start_Time'}, $entry{'End_Time'}, $entry{'Duration'} ) =
+      calctimes( $entry{'fudge'}, $entry{'Start_Time'}, $entry{'End_Time'} );
+    return %entry;
+}
+
+################################################################################
+# Main
+################################################################################
+
+# %c is a configuration hash.
+my %c;
+
+%c = configure( \%c );
+
+if ( $c{'query'} ) {
+    query( $c{dbh}, $c{'weeks_ago'} );
+    $c{dbh}->disconnect;
+    exit();
+} elsif( $c{'create-db'} ) {
+    create_timesheet( $c{dbh}, \@column, \%column_type );
+    $c{dbh}->disconnect;
+    exit();
+}
+
+my %entry;
+%entry = get_data( \%c, \%entry );
+
+open( FILE, ">>$c{'file'}" );
+print FILE "\n" . timestamp( $entry{'End_Time'} );
+print FILE ", project: $entry{'Project'}, $entry{'Ticket_Number'}, $entry{'Site'}, $entry{'Duration'}, $entry{'Notes'}\n";
+print FILE "\n========================================";
+print FILE "========================================\n";
+close FILE;
+
+#$entry{'Start_Time'} = singlequote( $entry{'Start_Time'} );
+#$entry{'End_Time'} = singlequote( $entry{'End_Time'} );
+
+insert_timesheet( $c{dbh}, \%entry, 'Start_Time', 'End_Time', 'Project', 'Ticket_Number', 'Site', 'Duration', 'Notes');
+
+__END__
+
+=head1 NAME
+
+timesheet - A simple database application for keeping track of time entries.
+
+=head1 SYNOPSIS
+
+    timesheet [--conf=config file] [--query --weeks-ago=N] | [--create-db=database name] [--debug]
+
+--conf specifies a config file, defaulting to $HOME/.timesheet
+
+If the --query flag is specified, it must be followed by
+--weeks-ago, which takes a whole number of weeks. This
+will query the database for all timesheet entries less
+than or equal to N weeks old.
+
+The --create-db flag does not launch the application, instead it creates the named database.
+
+--debug -- enables debugging messages, also bypasses the editor and reads the timesheet entry from a static file.
+
+=head1 DESCRIPTION
+
+This program runs in either normal or query mode. In normal mode, it
+will open a text editor and prompt for the following:
+
+    Project:
+    Site:
+    Fudge:
+    Notes:
+
+When the program starts, the start time will be recorded by the
+program. When the user closes the program, then end time will be recorded,
+and a time entry will be written to an sql-lite database. The duration
+will be modified by the entry in 'Fudge' which can be positive or
+negative. All timesheet entries will contain both 'Project' and 'Site'
+entries. Notes are discarded.
+
+The configuration file is a yaml file containing the following entries:
+
+    db: the database that all time entries get written to.
+    file: a flat file containing timesheet entries.
+    tempfile: the base name of the temp file where the user
+              fills in "Project", "Site", "Fudge" and "Notes"
+    editor: the text editor opened to edit 'tempfile'.
+
+In query mode, the program will query the database for all timesheet
+entries less than or equal to 'weeks-ago' weeks old. This will return the
+following fields for each time sheet entry:
+
+    start time
+    end time
+    project
+    site
+    duration
+
+=cut

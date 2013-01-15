@@ -1,0 +1,46 @@
+#! /bin/bash
+
+#set -x
+
+# repreproc_dirs -- research sort and compare files.
+# Usage: scresearch.sh [RAWDIR] [REFORMDIR]
+#        RAWDIR defaults to './archive/raw'
+#        REFORMDIR defaults to '.'
+# You may not specify REFORMDIR without specifying RAWDIR.
+
+rawdir=${1:-"./archive/raw"}
+reformdir=${2:-"."}
+
+################################################################################ 
+# resetraw ()
+# Arguments: file set
+#          : raw directory
+#          : reform.ini directory
+################################################################################ 
+resetraw() {
+    local fileset=${1}
+    egrep '^(FILE[0-9][0-9]|INIFILE_IN)' $reformdir/reform.ini \
+     | cut -d ',' -f1 \
+     | sed -e 's/^FILE//' -e 's/[ \t]*= "/:/'  -e 's/"//' -e 's/INIFILE_IN/999/' \
+     | while read file
+    do  
+        cp $rawdir/$fileset*${file%:*}.raw ${file#*:}
+    done
+}
+
+# Read value for OUTFILE from reform.ini
+outfile=$( sed -n '/^OUTFILE/s/^[^"]*"\([^"]*\)".*/\1/p' <<< $reformdir/reform.ini )
+
+# for each file set
+for fs in $( for file in $(echo *.raw); do base=$( sed 's/000[1-9].raw//' <<< $file ); echo $base; done | sort -u)
+do
+    mkdir $fs
+    cp $fs*.raw $fs/
+    resetraw $fs
+    preproc
+    cp *.old $fs
+    mv $outfile $fs
+    ls $fs/*
+done
+
+

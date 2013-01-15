@@ -1,0 +1,22 @@
+#! /bin/bash
+title ()
+{
+    echo $@ | perl -ne 'chomp; print "\n$_\n"; print "=" x length($_) . "\n" '
+}
+
+
+title Open incidents with status not equal 'waiting'
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query2
+set pagesize 0
+select parentnumber
+       , agencyname
+       , sitename
+       , subject
+       , details
+       , targetdatetime
+       , status
+from fusion.task
+where owner='bchittenden'
+	and parentlink_category='incident'
+	and (status != 'waiting' and status != 'closed') ;
+query2

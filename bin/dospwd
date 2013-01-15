@@ -1,0 +1,40 @@
+#! /usr/bin/perl
+
+#  idrive -> /mnt/apps/
+#  jdrive -> /mnt/users/
+#  kdrive -> /mnt/vine
+#  ldrive -> /mnt/depts
+#  udrive -> /mnt/root/pub/
+#  y_drive -> /mnt/users/bchittenden/intranet/y_drive/
+
+$HOME=$ENV{HOME};
+
+if( scalar @ARGV != 0 ){
+	while(<>){
+		$PWD=$_;
+	}
+} else {
+	$PWD = `pwd`;
+}
+
+
+if( $0 =~ /cygpwd/ ){
+	$PWD =~ s|$HOME|/cygdrive/t|;
+} elsif( $0 =~ /macpwd/ ){
+	$PWD =~ s|$HOME|/Volumes/bchittenden|;
+} else {
+	$PWD =~ s|$HOME\b|t:|;
+	$PWD =~ s|/mnt/apps\b|i:|;
+	$PWD =~ s|/mnt/users\b|j:|;
+	$PWD =~ s|/mnt/vine\b|k:|;
+	$PWD =~ s|/mnt/depts\b|l:|;
+	$PWD =~ s|/mnt/root/pub\b|u:|;
+	$PWD =~ s|/prodfsnr/prod\b|p:|;
+	$PWD =~ s|/prod\b|p:|;
+	$PWD =~ s|/prepfsnr/prep\b|r:|;
+	$PWD =~ s|/prep\b|r:|;
+	$PWD =~ s|/|\\|g;
+}
+
+print $PWD;
+

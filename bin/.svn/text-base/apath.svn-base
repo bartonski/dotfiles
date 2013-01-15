@@ -1,0 +1,78 @@
+#! /usr/bin/perl -w
+
+use strict;
+use DBI;
+use Getopt::Long;
+
+my $sender = '';	# option variable with default value
+my $env_home = '';	# option variable with default value
+GetOptions (
+	'sender=s' => \$sender,
+	'env_home=s' => \$env_home
+	);
+
+$env_home ||= "/prep";
+my $user="appriss";
+my $passwd="appriss";
+my $dbname;
+$dbname = $env_home =~ /prep/ ? "prep01.appriss.com" : "prod01.appriss.com";
+
+
+my $dbh;
+$dbh = DBI->connect("dbi:Oracle:$dbname", $user, $passwd) or die $dbh->errstr;
+
+# Unix directory.
+sub unixDir {
+	my ($dir, $subdir) = @_;
+	$dir =~ s|\\|/|g; 
+	$subdir = $subdir ? "/$subdir" : "";
+	return "$env_home/$dir$subdir";
+}
+
+my $sender_id;
+my $site_id;
+my $agency;
+
+my $query1 =qq{
+        select sender_id, site_id, agency
+        from STDVINE.SV_AGENCY_CODE
+        where sender_id like upper('%s%%')
+};
+
+my $query2 =qq{
+select 
+	s.directory_path, 
+	s.sub_directory_path,
+	s.site_name,
+	s.agency_desc
+from
+	stdvine.sv_agency_code a,
+	answers.se_dashboard_all_agency_vw s
+where
+	a.site_id = %s
+	and a.site_id = s.site_id
+	and a.agency = %s
+	and a.agency = s.agency
+};
+
+# Main
+
+my $sth = $dbh->prepare( sprintf $query1, $sender );
+$sth->execute;
+
+my @agency_info;
+
+#while ( push @agency_info, $sth->fetchrow() )
+while ( ($sender_id, $site_id, $agency) = $sth->fetchrow() )
+{
+	my $sth2 = $dbh->prepare( sprintf $query2, $site_id, $agency );
+	$sth2->execute;	
+	my( $directory_path, $sub_directory_path, $site_name, $agency_desc);
+	while ( ( $directory_path, $sub_directory_path, $site_name, $agency_desc ) = $sth2->fetchrow() ) {
+		my $unixdir = unixDir($directory_path, $sub_directory_path);
+		if ( -d $unixdir ){
+			print unixDir($directory_path, $sub_directory_path) . "\n";	
+		}
+	}
+}
+

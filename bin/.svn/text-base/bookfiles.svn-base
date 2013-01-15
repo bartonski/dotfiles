@@ -1,0 +1,4 @@
+for i in $(ilog BOOK)
+do
+find archive -newer archive/$1 ! -newer archive/$2 -name "*.sav" | xargs grep "^OR.*$i" | sed "s/:/\n/"
+done

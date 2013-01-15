@@ -1,0 +1,14 @@
+#! /bin/sh
+#set -x
+path="$HOME/bin/sql"
+
+if [ -f "$path/$2.fmt" ]
+then
+	format="$path/$2.fmt"
+else
+	format="$path/default.fmt"
+fi
+
+cmd="sqlplus -S $($HOME/bin/dbauth)@$(grep $1 $path/server)"
+echo "$(cat $format; cat $path/$2.sql);" | $cmd | sed -e 's/\t//g' -e 's/|/\t/g'
+

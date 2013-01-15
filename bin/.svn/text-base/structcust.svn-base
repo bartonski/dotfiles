@@ -1,0 +1,4 @@
+#! /bin/bash
+printcust $1 \
+| perl -ne 'if( /(\b\d+\.(_|trn|rec)\w*\b)/ ){print "$1\n";}' \
+| perl -ne 'if( /\.rec/){ print "$_" }elsif(/\.trn/){print " $_" }else{ print "  $_"}'

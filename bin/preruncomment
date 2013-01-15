@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Time::localtime;
+use Text::Wrap qw( wrap $columns );
+
+my $datestring .= localtime->mon() + 1;
+   $datestring .= '/' . localtime->mday();
+   $datestring .= '/' . (localtime->year() + 1900);
+   $columns = 44;
+my $initial_tab = "";      # Tab before first line
+my $subsequent_tab = "";   # All other lines flush left
+my @tmp;
+
+if( scalar @ARGV > 0 ){
+        @tmp = @ARGV;
+} else {
+        @tmp = <>; # slurp STDIN
+}
+
+my @lines = split '\n', wrap($initial_tab, $subsequent_tab, @tmp);
+
+my $firstline = shift @lines;
+
+my $user = $ENV{"USER"};
+
+my $comment = 
+
+#      "#  01/12/2009  NAME               Initial version"
+printf "#  %+10s  %-18s %s\n", $datestring, $user, $firstline;
+for my $line (@lines) {
+	print "#                                 $line\n";
+#             "#  01/12/2009  NAME               Initial version"
+}
+

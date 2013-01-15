@@ -1,0 +1,2 @@
+#!/bin/bash
+select x in 'timesheet2' 'timesheet --query --weeks-ago=3' 'mytix' 'break'; do $x; done

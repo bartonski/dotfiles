@@ -1,0 +1,32 @@
+#!/bin/sh 
+
+# Shell script to start customizer on local X server over SSH tunnel.
+# When invoked as 'customizerprep', connects to prep.
+# When invoked as 'customizerprod', connects to prod.
+# Install the script in your path and copy or link it to both names for easy use.
+#
+# $ cp customizer ~/bin
+# $ ln -s ~/bin/customizer ~/bin/customizerprep
+# $ ln -s ~/bin/customizer ~/bin/customizerprod
+#
+# Example usage:
+# customizerprep ct
+# customizerprod ky
+#
+
+if (( $# < 1 ))
+then
+	echo "Usage: $0 <state abbr>"
+	exit 1
+fi
+
+
+
+state=`echo $1 | tr [A-Z] [a-z]`
+
+if [[ "`basename $0`" == "customizerprod" ]]
+then
+	ssh -f -X prodcnx01.prod.appriss.com "cd /prodfsnr/prod/project/vine/$state/${state}state/data && /opt/appriss/java/jre/bin/java  -Xmx128m -jar /opt/appriss/customizer/prod/Customizer.jar > /dev/null" 2>/dev/null
+else
+	ssh -f -X prodcnx01.prod.appriss.com "cd /prepfsnr/prep/project/vine/$state/${state}state/data && /opt/appriss/java/jre/bin/java  -Xmx128m -jar /opt/appriss/customizer/prep/Customizer.jar > /dev/null" 2>/dev/null
+fi

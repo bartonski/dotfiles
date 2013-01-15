@@ -1,0 +1,26 @@
+#! /bin/sh
+
+#### Set Variables ####
+alias dts='date +%Y%m%d'
+alias filter='egrep -v "^$|rows selected"'
+OUTFILE="$HOME/tmp/${USER}_tickets.$(dts).txt"
+
+> $OUTFILE
+
+#### Run Queries ####
+$HOME/bin/runsql2 -d '|' proditsm itsm_change | filter >> $OUTFILE
+$HOME/bin/runsql2 -d '|' proditsm itsm_change_tasks | filter >> $OUTFILE
+$HOME/bin/runsql2 -d '|' proditsm itsm_incident_tasks | sed 's/I:[ |]\+/I:/'  | filter >> $OUTFILE
+$HOME/bin/runsql2 -d '|' proditsm itsm_incident | sed 's/I:[ |]\+/I:/'  | filter >> $OUTFILE
+$HOME/bin/runsql2 -d '|' proditsm itsm_problem | sed -e 's/P:[ |]\+/P:/' | filter >> $OUTFILE
+
+#### Print Header ####
+echo "Priority|Ticket Number|Site|Agency|Summary|Status|!Target Date" > $OUTFILE.tmp
+
+#### Sort Results by Date ####
+sort -t '|' -k7 $OUTFILE >> $OUTFILE.tmp
+mv $OUTFILE.tmp $OUTFILE
+sed -i -e 's/!Target Date/Target Date/' -e 's/[ \t]\+|[ \t]\+/|/g' $OUTFILE
+
+cat $OUTFILE
+echo $OUTFILE

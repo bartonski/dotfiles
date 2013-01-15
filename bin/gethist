@@ -1,0 +1,5 @@
+for i in intarchive01.int.appriss.com prepaftpproc01.prep.appriss.com prepfsnr.prep.appriss.com prepimpt01.prep.appriss.com prodaftpproc01.prod.appriss.com prodaftpproc01.prod.appriss.com prodclog01.prod.appriss.com prodfsnr.prod.appriss.com prodftp01.prod.appriss.com prodimpt01.prod.appriss.com
+do
+	server=`echo $i| cut -d '.' -f1`
+	ssh $i ls 
+done 

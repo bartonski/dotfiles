@@ -1,0 +1,19 @@
+#! /bin/sh
+
+#### Set Variables ####
+alias dts='date +%Y%m%d'
+alias filter='egrep -v "^$|rows selected"'
+OUTFILE="$HOME/tmp/barton_old_tickets.$(dts).txt"
+
+#### Print Header ####
+echo "Priority	Ticket Number	Site	Agency	Summary	Status	Target Date" > $OUTFILE
+
+#### Run Queries ####
+$HOME/bin/runsql proditsm itsm_old_change | filter >> $OUTFILE
+$HOME/bin/runsql proditsm itsm_old_change_tasks | filter >> $OUTFILE
+$HOME/bin/runsql proditsm itsm_old_incident_tasks | sed 's/I:[ \t]\+/I:/'  | filter >> $OUTFILE
+$HOME/bin/runsql proditsm itsm_old_problem | sed 's/P:[ \t]\+/P:/' | filter >> $OUTFILE
+
+#### Display Results ####
+sed -e 's/ \+/ /g' -e 's/ \t/\t/' $OUTFILE | expand -t 1,8,18,38,80,165,180
+echo $OUTFILE

@@ -1,0 +1,27 @@
+#! /bin/bash
+
+title ()
+{
+    echo $@ | perl -ne 'chomp; print "\n$_\n"; print "=" x length($_) . "\n" '
+}
+
+title Changes with status 'Approved for Release':
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query2
+set pagesize 0
+--column j.notesbody format a30
+--select changenumber, agencyname, sitename, subject, priority, description, risk
+select
+        priority,
+        changenumber,
+        sitename,
+        agencyname,
+        subject,
+        status,
+        SCHEDULEDSTARTDATE,
+        SCHEDULEDENDDATE
+from fusion.change
+where
+        owner='bchittenden'
+        and status = 'approved for release'
+order by changenumber;
+query2

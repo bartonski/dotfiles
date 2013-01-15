@@ -1,0 +1,85 @@
+#! /bin/bash
+divider() {
+printf "===================="
+printf "===================="
+printf "===================="
+printf "====================\n"
+}
+
+echo
+echo
+echo -n Change:
+#sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query1 | fmt -s -w 80
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query1 | sed  's/[:space:]+/ /'|  fmt -s -w 80
+set pagesize 0
+set long 10000 
+set longchunksize 10000 
+set linesize 10000 
+select c.changenumber
+     , c.agencyname
+     , c.sitename
+     , c.subject
+     , c.description
+from fusion.change c
+where c.changenumber = $1;
+query1
+
+divider
+echo "Open Tasks:"
+divider
+echo
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query2 | sed 's/[:space:]+/ /' | fmt -s -w 80
+set pagesize 0
+set long 10000 
+set longchunksize 10000 
+set linesize 10000 
+column t.owner format a10
+column t.subject format a20
+column t.details format a10000
+select
+ to_char(t.targetdatetime, 'MM/DD/YYYY HH24:MI:SS')
+ , '|'
+ , t.owner
+ , '|'
+ , t.subject
+ , t.details
+ , t.status
+ , '______________________________'
+from
+ FUSION.TASK t,
+ FUSION.CHANGE c
+where c.changenumber = $1
+  and c.recid = t.parentlink_recid
+  and t.status not in ('CLOSED','CANCELLED')
+order by t.targetdatetime;
+query2
+
+divider
+echo Journal Notes:
+divider
+echo
+#sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query2 | fmt -s -w 80
+sqlplus -S $($HOME/bin/dbauth)@proditsm.appriss.com << query3 | sed 's/[:space:]+/ /' | fmt -s -w 80
+set pagesize 0
+set long 10000 
+set longchunksize 10000 
+set linesize 10000 
+column j.createdby format a10
+column j.subject format a20
+column j.notesbody format a10000
+select
+ to_char(j.createddatetime, 'MM/DD/YYYY HH24:MI:SS')
+ , '|'
+ , j.createdby 
+ , '|'
+ , j.subject 
+ , j.notesbody
+ , '______________________________'
+from
+ FUSION.JOURNAL j,
+ FUSION.CHANGE c
+where c.changenumber = $1
+  and c.recid = j.parentlink_recid
+order by j.CREATEDDATETIME;
+query3
+

@@ -1,0 +1,14 @@
+#!/bin/bash
+sqlite3 ~/.timesheet/timesheet.db << query
+select 
+	datetime(start_time, 'unixepoch', 'localtime')
+	, datetime(end_time, 'unixepoch', 'localtime')
+	, project
+	, site
+	, duration 
+from 
+	timesheet 
+where 
+	start_time > strftime('%s', 'now', '-1 day', 'localtime') 
+order by start_time;
+query

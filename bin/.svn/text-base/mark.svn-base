@@ -1,0 +1,7 @@
+timestamp=`date +%y%b%d-%H.%M.%S`
+cp ${1} ${1}.${timestamp}
+echo ""                  >> ${1}.readme
+echo "================"  >> ${1}.readme
+md5sum ${1}.${timestamp} >> ${1}.readme
+vim + ${1}.readme
+

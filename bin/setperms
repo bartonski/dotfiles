@@ -1,0 +1,20 @@
+#! /bin/bash
+declare -A permissions
+permissions=(\
+  [.mask]='0444'\
+  [.postrun]='0555'\
+  [.prerun]='0555'\
+  [*.ini]='0444'\
+  [*.jar]='0555'\
+  [*.pl]='0555'\
+  [*.xslt]='0444'\
+  [Auth*_keys]='0600'\
+)
+
+for key in "${!permissions[@]}"
+do 
+  echo "$key => ${permissions[$key]}" 
+  find . -type f -name "$key" -print0 \
+         | xargs -0 chmod ${permissions[$key]} 2> /dev/null
+done
+ 

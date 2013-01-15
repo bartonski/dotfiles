@@ -1,0 +1,10 @@
+SENDERID=$1
+mkdir $SENDERID
+echo "Sender ID: $SENDERID" >  $SENDERID/project.txt
+echo "Site#    : "          >> $SENDERID/project.txt
+echo "Agency#  : "          >> $SENDERID/project.txt
+echo "Status   : "          >> $SENDERID/project.txt
+echo "Date     : `date`"    >> $SENDERID/project.txt
+echo "FR#      : "          >> $SENDERID/project.txt
+echo "Date due : "          >> $SENDERID/project.txt
+vim $SENDERID/project.txt

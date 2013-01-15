@@ -1,0 +1,26 @@
+#!/bin/bash
+# Usage: mkagencysvn senderid
+agency=${1}
+state=$( echo $agency | cut -c -2 | tr a-z A-Z )
+path="$state/$agency"
+svnurl='http://cvs.appriss.com/svn/ie/prod/Interfaces'
+mdcmd="mkdir -p $path/{tags,trunk,deploy}/{docs,QA,source}"
+importcmd="svn import $path $svnurl/$path"
+message="Importing $agency"
+rmcmd="rm -rf $path"
+cocmd="svn co $svnurl/$path $path"
+echo "Are the following commands OK?"
+echo "$mdcmd"
+echo $importcmd -m "$message" 
+echo "$rmcmd"
+echo "$cocmd"
+select x in 'yes' 'exit'
+do
+  if [ "${x}x" = "yesx" ]
+  then
+    eval $mdcmd
+    $importcmd -m "$message"
+  else
+    exit
+  fi
+done

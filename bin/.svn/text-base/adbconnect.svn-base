@@ -1,0 +1,5 @@
+export ORACLE_HOME=/usr/lib/oracle/11.1/client
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib
+export TNSADMIN=$ORACLE_HOME/network/admin/
+sqlplus $($HOME/bin/dbauth)@prep01.appriss.com
+

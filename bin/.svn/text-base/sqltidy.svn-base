@@ -1,0 +1,13 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+
+use SQL::Beautify;
+
+# slurp file
+local $/ = '';
+my $query = <>;
+
+my $sql = SQL::Beautify->new( query => $query );
+print $sql->beautify;

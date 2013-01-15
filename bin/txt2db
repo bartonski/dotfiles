@@ -1,0 +1,48 @@
+#! /usr/bin/perl
+#  12/31/2009         bchittenden txt2db takes as its arguments a database
+#                                 name, and the names of several text files.
+#                                 Each text file should be tab delimited, and
+#                                 have a header row containing field names.
+#                                 It will fill the database with tables
+#                                 corresponding to each text file. Each table
+#                                 will have rows corresponding to the header
+#                                 fields in the first line of the file.
+
+################################################################################
+# TODO:                                                                        #
+# 1) Better command line parsing.                                              #
+# 2) Use DBI, thus the ability to create other database types.                 #
+# 3) Accept data from STDIN.                                                   #
+# 4) Usage, warnings and error checking.                                       #
+# 5) Specify data types in column headings                                     #
+################################################################################
+
+use warnings;
+use strict;
+
+my $dbfile = shift @ARGV;
+foreach my $file ( @ARGV) {
+	open( DATA, $file) or die "Cannot open $file: $!";
+	$file =~ s/\.txt//;
+	$file =~ s/^.*\///;
+	$file =~ s/\./_/g;
+	my $sql;
+	my $header = 1;
+	open( DB, "| sqlite3 $dbfile");
+	while( <DATA> ){
+		chomp;
+		s/\r//;
+		if( $header ){
+			s/\t/,/g;
+		} else {
+			s/\t/','/g;
+			s/(^|$)/'/g;
+		}
+		my $action = $header ? "create table $file(" : "insert into $file values(";
+		$header = 0;
+		print STDERR $action . $_ . ");\n";
+		print DB $action . $_ . ");\n";
+	}
+	close DB;
+	close DATA;
+}

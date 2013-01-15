@@ -1,0 +1,23 @@
+#! /usr/bin/perl -w
+
+use strict;
+
+my $sender_id = $ARGV[0] || '^$';
+
+my $HOME = $ENV{"HOME"};
+my $VPDATA;
+open( $VPDATA, "$HOME/bin/vp.data" );
+
+while(<$VPDATA>){
+        chomp;
+        if(/^$sender_id/i || /$sender_id\s$/){
+                my ($si, $site_id, $agency, $site_name, $dp, $sdp) = split( '\t', $_);
+		$dp  =~ s:\\:\/:g;      # change backslashes to forward slashes
+		$sdp =~ s:(\w.*):\/$1:; # add leading slash if $sdp is populated
+                $si = lc($si);
+                print "$dp|$sdp\n";
+		last;
+        }
+}
+
+close $VPDATA;

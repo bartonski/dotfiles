@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $inpath=$ARGV[0];
+$inpath =~ s|http://cvs.appriss.com/svn/(.*?)(/.*)|http://cvs.appriss.com/viewcvs${2}?root=$1|;
+print "$inpath\n";

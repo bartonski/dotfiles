@@ -1,0 +1,28 @@
+#! /usr/bin/perl
+use warnings;
+use strict;
+
+my $dbfile = shift @ARGV;
+foreach my $file ( @ARGV) {
+	open( DATA, $file) or die "Cannot open $file: $!";
+	$file =~ s/\.txt//;
+	$file =~ s/^.*\///;
+	$file =~ s/\./_/g;
+	my $sql;
+	my $header = 1;
+	while( <DATA> ){
+		chomp;
+		s/\r//;
+		if( $header ){
+			s/\t/,/g;
+		} else {
+			s/\t/','/g;
+			s/(^|$)/'/g;
+		}
+		my $action = $header ? "create table $file(" : "insert into $file values(";
+		$header = 0;
+		$sql .= $action . $_ . ");\n";
+	}
+	system "echo \"$sql\" | sqlite3 $dbfile";
+	close DATA;
+}

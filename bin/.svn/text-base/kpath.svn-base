@@ -1,0 +1,18 @@
+#! /usr/bin/perl
+
+my $agency = $ARGV[0];
+my $state = substr($agency,0,2);
+my $site = "${state}state";
+
+my $path = "::fs2:vine:project:vine:$state:$site:Agencies:$agency";
+my $newpath = "::prodcwinfs02:PREDOC_CLEANUP:project:vine:$state:$site:Agencies:$agency";
+my $HOME = $ENV{"HOME"};
+$path =~ s/:/\\/g;
+$newpath =~ s/:/\\/g;
+print $path . "\n";
+#print $newpath . "\n";
+print "/cygdrive/k/project/vine/$state/$site/Agencies/$agency\n";
+print "$HOME/drives/kdrive/project/vine/$state/$site/Agencies/$agency\n";
+print "/Volumes/vine/project/vine/$state/$site/Agencies/$agency\n";
+#print("K:\\project\\vine\\$state\\$site\\Agencies\\$agency \n");
+
