@@ -1,0 +1,234 @@
+if (echo $HOSTNAME | grep -i 'prep' > /dev/null )
+then
+	. $HOME/.prepfunctions
+elif (echo $HOSTNAME | grep -i 'prod' > /dev/null)
+then
+	. $HOME/.prodfunctions
+else
+	. $HOME/.prodfunctions
+	. $HOME/.prepfunctions
+fi
+
+################################################################################
+# agency ()
+# Expects 2 arguments:
+#    sender-id -- the Sender ID of the agency for which we want site and
+#                 agency path information.
+#    name      -- The name of the calling function, returned if there are
+#                 less than two arguments.
+# Variables changed
+#    SITEPATH -- the site associated with sender-id
+#    AGENCY   -- the agency associated with sender-id
+################################################################################
+agency () 
+{ 
+	if [ $# -ge 2 ]
+	then
+		export SITEPATH=$(vinepath ${1} | cut -d '|' -f1)
+		export AGENCY=$(vinepath ${1} | cut -d '|' -f2)
+	else
+		echo "Usage: $1 sender-id"
+		return 1
+	fi
+	return 0
+}
+|################################################################################
+|# Used to grep for releases in a given import log file. The first argument is the
+|# time string used at the beginning of the log lines that you're trying to
+|# search through, allowing searches in files which have multiple resyncs.
+|################################################################################
+|releases () { egrep "$1.*RELE" $2 | awk '{print $4}'; }
+|
+|################################################################################
+|# Sets the variable FTPLOGS to today's FTP log file under core/services.
+|################################################################################
+|ftplog () {
+|	export \
+|	  FTPLOGS=$MY_ENV_HOME/core/services/ftp01/logs/$(dts).log 
+|	echo "$FTPLOGS";
+|}
+|
+|alias ftplogs=ftplog
+|
+|################################################################################
+|# Tests for existience of .running in a given directory. If this does not
+|# exist, create it using sudo (allowing users to create .running even if they
+|# do not have write permissions at their current user level). In the
+|# background, wait 15 minutes, then send an email reminder to remove the
+|# .running file from the current directory, if it still exists.
+|################################################################################
+|touchrunning ()
+|{
+|        if ! ls .running
+|        then
+|                sudo touch .running
+|                warnrunning &
+|        fi
+|}
+|
+|
+|################################################################################
+|# Utility function for touchrunning.
+|################################################################################
+|warnrunning ()
+|(
+|        ( sleep 900
+|        echo " " | mail $USER@appriss.com -s "remove .running from $(pwd)")
+|)
+|export ie="$HOME/development/ie"
+|export vendortree='http://cvs.appriss.com/svn/ie/vendors'
+|export vt=$vendortree
+|
+|# grep vendor tree
+|gvt () {
+|    local v='' 
+|    svn ls $vendortree | egrep -i "$1" | while read v
+|    do
+|        echo "$vendortree/$v" | egrep -i "$1" --color 
+|    done
+|}
+
+|## Get information about current agency
+|ai () {
+|	ainfo --sender=$1 --env_home=$MY_ENV_HOME | less
+|}
+|
+|## tail log files from ftpproc, optionally grepping.
+|watchftplogs () {
+|	tail -f $MY_ENV_HOME/core/services/ftp01/logs/$(dts).log | grep -i "$*"
+|}
+|
+|## given a directory in prod, print the analagous directory in prep. If no directory is
+|## given, use the current directory.
+|prodprep () {
+|	if test -d "$1"
+|	then
+|		dir=$(echo $1 | sed -e 's/\(prep\)/xxxx/' -e 's/\(prod\)/xxxx/' )
+|	else
+|		dir=$(pwd | sed -e 's/\(prep\)/xxxx/' -e 's/\(prod\)/xxxx/' )
+|	fi
+|	prep=$(echo $dir | sed 's/xxxx/prep/')
+|	prod=$(echo $dir | sed 's/xxxx/prod/')
+|	echo "$prod $prep"
+|}
+|
+|## given a directory in prep, print the analagous directory in prod. If no directory is
+|## given, use the current directory.
+|prepprod () {
+|	if test -d "$1"
+|	then
+|		dir=$(echo $1 | sed -e 's/\(prep\)/xxxx/' -e 's/\(prod\)/xxxx/' )
+|	else
+|		dir=$(pwd | sed -e 's/\(prep\)/xxxx/' -e 's/\(prod\)/xxxx/' )
+|	fi
+|	prep=$(echo $dir | sed 's/xxxx/prep/')
+|	prod=$(echo $dir | sed 's/xxxx/prod/')
+|	echo "$prep $prod"
+|}
+|
+|## diff the current directory in prep with the same directory in prod.
+|diffprod () {
+|	diff -b -q $(prepprod $@) | egrep -v 'Only in .prod|\.old|Common subdirectories|iseq.sys|\.txt|\.dat'
+|}
+
+
+|## Diff two interface directories, exclude irrelevant files and directories.
+|# Files snapshot/ftphome/interface.ini and trunk/source/interface.ini differ
+|diff_interface() { diff -b -r -q "$@" | egrep -v '\.(old|bad|tmp|bak|dat|prc|key)$|archive|fwdDir|iseq.sys|log|mrgedata|svn|updDir|\.resync_report' | sed -e 's/^Files/diff/' -e 's/ and / /' -e 's/ differ$//' ; }
+|## Log in to prodcnx01 so that you can run customizer.
+|alias customizer='ssh -X prodcnx01.prod.appriss.com'
+|frstatus() {
+|  select status in Urgent Easy Big Quit
+|  do
+|    if [ "${status}X" == 'QuitX' ]
+|      then break
+|    fi
+|    echo ==========================================================================
+|    echo [Status] == $(timestamp) == $status 
+|  done
+|}
+
+|vimcmd() { $1 > $2 && vim $2; }
+
+|################################################################################
+|# cloneftphome ()
+|# Expects 2 arguments:
+|#    agency dir -- the directory containing the ftphome directory.
+|#    target dir -- the directory where the ftphome directory is to be copied to
+|################################################################################
+|cloneftphome() { cd $1; find ftphome -type f ! -name "*.log"  ! -name "*.dat" ! -name "*.bak" ! -name "*.txt" ! -iname "*old"  -print0 \
+|  | xargs -0 tar cvf - | tar xf - -C $2
+|}
+|
+|bompwd() { pwd | sed "s|^$HOME/||"; echo \$JAIL = \'$JAIL\' ; echo "c:\\callct32\\vinesite\\$JAIL"; }
+|################################################################################
+|# todolist ()
+|# Creates a to-do list in $tmp/todo.$DTS.txt.
+|################################################################################
+|todolist() {
+|    DTS=$(dts)
+|    FILE="$HOME/tmp/${USER}_tickets.$DTS.txt"
+|    mytickets
+|    for i in $(cut -f 2 $FILE | grep -v 'Ticket Number')
+|    do title "$(grep $i $FILE | cut -f 2- | expand )"
+|    todo $i
+|    done > $tmp/todo.$DTS.txt
+|}
+|
+|alias spectrum="javaws $HOME/bin/oneclick.jnlp > /dev/null 2>&1 &"
+|################################################################################
+|# resetraw ()
+|# Arguments: file set
+|#          : raw directory
+|#          : reform.ini directory
+|################################################################################
+|resetraw() {
+|    fileset=${1}
+|    rawdir=${2:-"./archive/raw"} 
+|    reformdir=${3:-"."}
+|    egrep '^(FILE[0-9][0-9]|INIFILE_IN)' $reformdir/reform.ini \
+|     | cut -d ',' -f1 \
+|     | sed -e 's/^FILE//' -e 's/[ \t]*= "/:/'  -e 's/"//' -e 's/INIFILE_IN/999/' \
+|     | while read file
+|    do
+|        echo cp $rawdir/$fileset*${file%:*}.raw ${file#*:}
+|    done
+|}
+|
+|armpromote() {
+|    sender_id=$1
+|    for server in devaadapt02.dev qaaadapt03.qa prepaadapt02.prep prodaadapt03.prod
+|    do
+|        ssh $USER@$server.appriss.com "arm promote $sender_id"
+|    done
+|}
+|
+|ticketspread() {
+|    tmpfile=$tmp/${USER}_tickets.$(dts).txt
+|    csvfile=/tmp/tickets.$(dts).csv
+|    mytickets > /dev/null
+|    csvtool -t TAB col 1- $tmpfile > $csvfile && gnome-open $csvfile 
+|}
+
+|vimsvn() { 
+|    project=$(perl -e '$foo=qx(pwd); chomp $foo; $foo =~ s{^.*/(.+)_(rfc|i|pif).*}{$1}i; print "$foo";')
+|    vimcmd 'svn diff' /tmp/$project.svn.diff
+|    echo "svn ci -F /tmp/$project.svn.diff" 
+|}
+|
+|c () {
+|    change "$@" | less
+|}
+|
+
+
+
+|clog () {
+|   local agency=$1
+|   local host=prodclog01.prod.appriss.com
+|   local grepcmd="grep '$agency.*OK UPLOAD' /var/log/network/prodftp.log"
+|   local cutcmd="cut -d ' ' -f 1,2,3,18-"
+|   ssh $host "$grepcmd | $cutcmd"
+|}
+|
+
