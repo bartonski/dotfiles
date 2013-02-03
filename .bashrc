@@ -62,7 +62,6 @@ fi
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
-alias past='ls -lart'
 alias vim='/usr/bin/vi'
 
 # Add an "alert" alias for long running commands.  Use like so:
@@ -123,7 +122,7 @@ export red=31
 export green=32
 export yellow=33
 
-if (echo $HOSTNAME | grep -i 'prep' > /dev/null )
+if ( echo $HOSTNAME | grep -i 'prep' > /dev/null )
 then
 	promptcolor=$green
 	export MY_ENV_HOME=/prepfsnr/prep
