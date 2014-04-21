@@ -3,11 +3,13 @@
 use warnings;
 use strict;
 
+# Byte 0: Same state
+# Byte 1: Out of table
 # Possible states:
-# 0: Enterng table
-# 1: In table
-# 2: Exiting table
-# 3: Out of table
+# |0|0| 0: Enterng table
+# |0|1| 1: In table
+# |1|0| 2: Exiting table
+# |1|1| 3: Out of table
 my $in_table = 2;
 
 sub print_line {
@@ -15,19 +17,19 @@ sub print_line {
     my @line_start = (
           "<table><tr><td>" # entering table ( in table, changed )
         , "<tr><td>" # In table ( in table, unchanged )
-        , "<tr><td>" # exiting table ( not in table, changed )
+        , "</td></tr></table>" # Exiting table ( not in table, changed)
         , "" # Not in table ( not in table, unchanged )
     );
     my @line_end = (
           "</td></tr>" # Entering table
         , "</td></tr>" # In table
-        , "</td></tr></table>" # Exiting table
+        , "" # Exiting table
         , "" # Not in table
     );
     my @delimiter = (
           "</td><td>" # Entering table
         , "</td><td>" # In table
-        , "</td><td>" # Exiting table
+        , "" # Exiting table
         , "" # Not in table
     );
     my @text = split ( ';', $line );
