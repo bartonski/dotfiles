@@ -1,0 +1,121 @@
+#! /bin/bash
+
+dts() { date +%Y%m%d_%H.%M.%S; }
+TODAY="Today: $( date +'%Y-%m-%d')"
+MARKDOWN_PATH="$HOME/Documents/markdown"
+BASENAME='todo'
+MARKDOWN_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).markdown"
+EDIT_FILE="$MARKDOWN_PATH/edit$(dts).txt"
+ITEM_FILE="$MARKDOWN_PATH/items$(dts).txt"
+HTML_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).html"
+PUBLIC_HTML_FILE="${BASENAME}.html"
+
+if [ ! -d $MARKDOWN_PATH ]
+then
+    mkdir -p $MARKDOWN_PATH
+fi
+
+spaces='    '
+
+echo "Paste tickets here, the press <Control+d>"
+#perl $HOME/bin/tablify_tickets.pl > $ITEM_FILE
+cat > $ITEM_FILE
+
+tick ()  {
+    chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+\(Support\|Migrations\).*//'
+    add_semicolons='s|^\([[:digit:]]\+\)|\1;|'
+    change_colons='s/:/;/g'
+    escape_underscores='s/_/\\_/'
+    sed -i "$chopline; $add_semicolons; $change_colons; $escape_underscores" $1
+}
+
+tock() {
+    urlify='s|^\([[:digit:]]\+\)|<a href="http://ticket.bywatersolutions.com/Ticket/Display.html?id=\1">\1</a>|g'
+    sed -i "$urlify" $1
+    perl -i $HOME/bin/semicolon_to_table.pl $1
+}
+
+# tick ()  {
+#     chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+Support.*//'
+#     escape_underscores='s/_/\\_/'
+#     sed -i "$chopline; $urlify; $escape_underscores" $1
+# }
+
+# TODO: turn ticket numbers into ticket URLs.
+#sed -i 's/ \+[0-9]\+[[:space:]]\+Support.*//; s/^/* /; s/_/\\_/' $ITEM_FILE
+tick $ITEM_FILE
+
+cat $ITEM_FILE >> $EDIT_FILE
+
+# printf "<table>\n" >> $MARKDOWN_FILE
+# 
+# for hour in {8..19}
+# do
+#     for minute in '00' '30'
+#     do
+#         printf "<tr>\n<td>$hour:$minute</td>\n<td>$spaces</td>\n</tr>" >> $MARKDOWN_FILE
+#     done
+# done
+# 
+# printf '</table>' >> $MARKDOWN_FILE
+
+printf ' 8:00    ;
+ 8:30    ;
+ 9:00    ;
+ 9:30    ;
+ 10:00   ;
+ 10:30   ;
+ 11:00   ;
+ 11:30   ;
+ 12:00   ; LUNCH 
+ 12:30   ; LUNCH 
+ 13:00   ; Regroup 
+ 13:30   ;
+ 14:00   ;
+ 14:30   ;
+ 15:00   ;
+ 15:30   ;
+ 16:00   ;
+ 16:30   ;
+ 17:00   ;
+ 17:30   ;
+ 18:00   ;
+ 18:30   ;
+ 19:00   ;
+ 19:30   ;' >> $EDIT_FILE 
+
+vim $EDIT_FILE
+
+tock $EDIT_FILE
+
+cat > $MARKDOWN_FILE << MD
+<style>
+table
+{
+border-collapse:collapse;
+}
+table,th, td
+{
+border: 1px solid black;
+}
+</style>
+
+# $TODAY
+
+MD
+
+cat $EDIT_FILE >> $MARKDOWN_FILE
+
+markdown $MARKDOWN_FILE > $HTML_FILE
+
+if [ ! -d $HOME/public_html/todo_files ]
+then
+    mkdir -p $HOME/public_html/todo_files
+fi
+ln -f -s $HTML_FILE $HOME/public_html/$PUBLIC_HTML_FILE
+ln -f -s $MARKDOWN_PATH/*.html $HOME/public_html/todo_files/
+
+xdg-open http://localhost/~${USER}/$PUBLIC_HTML_FILE
+
+sleep 2
+echo
