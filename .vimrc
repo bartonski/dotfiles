@@ -45,5 +45,5 @@ command! FormatXML call DoFormatXML()
     autocmd FileType ruby,eruby,yaml set ai sw=2 sts=2 et
   augroup END
 
-" execute pathogen#infect()
+execute pathogen#infect()
 
