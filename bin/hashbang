@@ -1,0 +1,9 @@
+#! /bin/sh
+
+# $ME is the 'hashbang' command.
+ME=$(basename $0)
+
+# $RUN is everything after 'hashbang' on the '#!' line.
+RUN=$(sed -n "1p;s/.*$ME//")
+
+eval $RUN

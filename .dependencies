@@ -1,0 +1,41 @@
+rvm               # soft
+lesspipe          # soft
+dircolors         # soft
+notify-send       # soft ??
+vi                # hard
+xsel              # soft
+less              # soft?
+ruler.pl          # soft; should be conditional.
+mtr               # soft
+bc                # soft
+perl              # soft -- but really ...
+sqlite3           # soft
+gnome-open        # soft; should really be made conditional
+vim               # soft
+$HOME/PDF/        # create if it doesn't exist?
+74.125.65.104     # pingable ipv4 address for google.com -- soft
+svn               # soft
+tidy              # soft
+jpegtopnm         # soft
+pnmscale          # soft
+ppmtopgm          # soft
+ppmdither         # soft
+potrace           # soft
+enscript          # soft
+PDF               # -- as pdf print queue.
+markdown2pdf      # soft
+tmux              # soft
+Plack             # perl library
+File::Temp        # perl library
+md5sum            # soft dependency
+shasum            # soft dependency
+markdown          # hard dependency
+xdg-open          # soft dependency, should be made conditional
+cksum             # soft dependency
+YAML              # perl library
+File::Temp        # perl library
+Text::Wrap        # perl library
+Term::ANSIColor   # perl library
+OpenOffice::OODoc # perl library
+Text::CSV_XS      # perl library
+Time::Local       # perl library

@@ -1,0 +1,16 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+
+my $percent =$ARGV[0];
+#my $bars=$percent  >= 10 ?  ($percent /5)-2:2;
+my $pointer = ($percent  < 5) 
+            ?  '' : ( $percent  < 10 ) 
+            ?  '|' : ( $percent < 95 )
+            ?  '>|'  : '>' ;
+
+my $bars = ( $percent/5 ) - length( $pointer );
+
+my $dots=20 - $bars - length( $pointer );
+print "Coffee: |" . "=" x $bars . $pointer . "." x $dots . "| " . $percent. " %\n"
