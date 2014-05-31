@@ -1,9 +1,34 @@
-#! /bin/sh
+#! /usr/bin/perl
 
-# $ME is the 'hashbang' command.
-ME=$(basename $0)
+# The 'hashbang' command is used to chop the hashbang line
+# off the current file, then run the the arguments to
+# hashbang on that file.
+#
+# For example, let's say that you have a text file called 'catme'
+# that you want to display running 'cat'
+#
+# The file would then start with
+#
+# #! hashbang /bin/cat
+#
+# hashbang will then chop the first line off of the file, then run the
+# rest of the file through cat.
 
-# $RUN is everything after 'hashbang' on the '#!' line.
-RUN=$(sed -n "1p;s/.*$ME//")
+use strict;
+use warnings;
 
-eval $RUN
+my $file = pop @ARGV;
+my $command = "@ARGV";
+
+my $IN;
+open( $IN, '<', $file ) or die "Cannot open '$file' for reading: $!";
+my $FILTER;
+open ( $FILTER, '|-', $command ) or die "Cannot open pipe to command '$command': $!";
+
+my @contents = <$IN>;
+
+shift @contents; # ditch first line
+
+for my $line ( @contents ) {
+    print $FILTER $line;
+}
