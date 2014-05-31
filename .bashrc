@@ -20,8 +20,6 @@ case $- in
       *) return;;
 esac
 
-set -o vi
-
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 
@@ -59,7 +57,6 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases
-alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 alias vim='/usr/bin/vi'
@@ -89,7 +86,7 @@ if ! shopt -oq posix; then
 fi
 
 export LC_ALL=C
-export EDITOR=/usr/bin/vim
+export EDITOR=/usr/bin/vi
 
 export HISTSIZE=10000
 export HISTFILESIZE=20000
@@ -103,7 +100,7 @@ if which xsel > /dev/null
 then
     export CLIPCOPY='xsel -i'
     export CLIPCLIPBOARD='xsel -i --clipboard'
-    export CLIPPASTE='xsel -0'
+    export CLIPPASTE='xsel -o'
 else
     export CLIPCOPY='pbcopy'
     export CLIPCLIPBOARD='pbcopy'
@@ -116,7 +113,6 @@ test -s ~/.alias && . ~/.alias || true
 # left to .inputrc, if available.
 # set -o vi
 
-export PATH="$PATH:/usr/bin:$HOME/bin"
 # Define ANSI colors for prompts.
 export red=31
 export green=32
@@ -146,3 +142,8 @@ bind '"\e[17~":"exit\n"'
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
+
+PATH=$PATH:/usr/bin:$HOME/bin:$HOME/.rvm/bin # Add RVM to PATH for scripting
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"

@@ -15,9 +15,9 @@ my $in_table = 2;
 sub print_line {
     my ( $state, $line ) = @_;
     my @line_start = (
-          "<table><tr><td>" # entering table ( in table, changed )
+          "<br /><table><tr><td>" # entering table ( in table, changed )
         , "<tr><td>" # In table ( in table, unchanged )
-        , "</td></tr></table>" # Exiting table ( not in table, changed)
+        , "</td></tr></table>\n" # Exiting table ( not in table, changed)
         , "" # Not in table ( not in table, unchanged )
     );
     my @line_end = (

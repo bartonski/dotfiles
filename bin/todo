@@ -22,6 +22,9 @@ echo "Paste tickets here, the press <Control+d>"
 cat > $ITEM_FILE
 
 tick ()  {
+    sed -i '/^#/d' $1
+    sed -i 's/copy Edit/Edit/' $1
+    sed -i 's/\(.*\)Edit/\n## \1/' $1 ## don't remove the newline here -- it's literal text.
     chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+\(Support\|Migrations\).*//'
     add_semicolons='s|^\([[:digit:]]\+\)|\1;|'
     change_colons='s/:/;/g'
@@ -59,7 +62,9 @@ cat $ITEM_FILE >> $EDIT_FILE
 # 
 # printf '</table>' >> $MARKDOWN_FILE
 
-printf ' 8:00    ;
+printf '
+
+ 8:00    ;
  8:30    ;
  9:00    ;
  9:30    ;
@@ -115,7 +120,9 @@ fi
 ln -f -s $HTML_FILE $HOME/public_html/$PUBLIC_HTML_FILE
 ln -f -s $MARKDOWN_PATH/*.html $HOME/public_html/todo_files/
 
-xdg-open http://localhost/~${USER}/$PUBLIC_HTML_FILE
+if [ ! -z $DISPLAY ]; then 
+    xdg-open http://localhost/~${USER}/$PUBLIC_HTML_FILE
+    sleep 2
+    echo
+fi
 
-sleep 2
-echo
