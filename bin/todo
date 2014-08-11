@@ -4,6 +4,7 @@ dts() { date +%Y%m%d_%H.%M.%S; }
 TODAY="Today: $( date +'%Y-%m-%d')"
 MARKDOWN_PATH="$HOME/Documents/markdown"
 BASENAME='todo'
+PREFORMAT_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).preformat"
 MARKDOWN_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).markdown"
 EDIT_FILE="$MARKDOWN_PATH/edit$(dts).txt"
 ITEM_FILE="$MARKDOWN_PATH/items$(dts).txt"
@@ -21,10 +22,18 @@ echo "Paste tickets here, the press <Control+d>"
 #perl $HOME/bin/tablify_tickets.pl > $ITEM_FILE
 cat > $ITEM_FILE
 
-tick ()  {
-    sed -i '/^#/d' $1
+## Make the following changes:
+# Remove initial hash characters, except when doubled.
+# For any line containing 'copy Edit' or 'Edit', remove those words and insert a leading '##' on the line.
+# Remove the end of the line for any line containig a priority followed by the queue names 'Support' or 'Migrations'.
+# Add a semi-colon after the ticket number
+# Change colons to semi-colons
+# Escape underscores with back-slashes.
+format_raw ()  {
+    sed -i '/^#[^#]/d' $1
     sed -i 's/copy Edit/Edit/' $1
-    sed -i 's/\(.*\)Edit/\n## \1/' $1 ## don't remove the newline here -- it's literal text.
+    sed -i 's/\(.*[^\\]\)Edit/\n## \1/' $1 ## don't remove the newline here -- it's literal text.
+    sed -i 's/\\([Ee]dit)/\t/' $1          ## Un-escape '\Edit'.
     chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+\(Support\|Migrations\).*//'
     add_semicolons='s|^\([[:digit:]]\+\)|\1;|'
     change_colons='s/:/;/g'
@@ -32,13 +41,15 @@ tick ()  {
     sed -i "$chopline; $add_semicolons; $change_colons; $escape_underscores" $1
 }
 
-tock() {
+preformat() {
+    local infile=$1
+    local outfile=$2
     urlify='s|^\([[:digit:]]\+\)|<a href="http://ticket.bywatersolutions.com/Ticket/Display.html?id=\1">\1</a>|g'
-    sed -i "$urlify" $1
-    perl -i $HOME/bin/semicolon_to_table.pl $1
+    sed "$urlify" $1 > $outfile
+    perl -i $HOME/bin/semicolon_to_table.pl $outfile
 }
 
-# tick ()  {
+# format_raw ()  {
 #     chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+Support.*//'
 #     escape_underscores='s/_/\\_/'
 #     sed -i "$chopline; $urlify; $escape_underscores" $1
@@ -46,7 +57,7 @@ tock() {
 
 # TODO: turn ticket numbers into ticket URLs.
 #sed -i 's/ \+[0-9]\+[[:space:]]\+Support.*//; s/^/* /; s/_/\\_/' $ITEM_FILE
-tick $ITEM_FILE
+format_raw $ITEM_FILE
 
 cat $ITEM_FILE >> $EDIT_FILE
 
@@ -89,9 +100,12 @@ printf '
  19:00   ;
  19:30   ;' >> $EDIT_FILE 
 
-vim $EDIT_FILE
+$EDITOR $EDIT_FILE
 
-tock $EDIT_FILE
+preformat $EDIT_FILE $PREFORMAT_FILE
+
+echo ""
+echo "Edit file: $EDIT_FILE"
 
 cat > $MARKDOWN_FILE << MD
 <style>
@@ -109,9 +123,12 @@ border: 1px solid black;
 
 MD
 
-cat $EDIT_FILE >> $MARKDOWN_FILE
+cat $PREFORMAT_FILE >> $MARKDOWN_FILE
 
 markdown $MARKDOWN_FILE > $HTML_FILE
+
+echo "Html file: $HTML_FILE"
+
 
 if [ ! -d $HOME/public_html/todo_files ]
 then
@@ -123,6 +140,6 @@ ln -f -s $MARKDOWN_PATH/*.html $HOME/public_html/todo_files/
 if [ ! -z $DISPLAY ]; then 
     xdg-open http://localhost/~${USER}/$PUBLIC_HTML_FILE
     sleep 2
-    echo
+    echo "Opened http://localhost/~${USER}/$PUBLIC_HTML_FILE"
 fi
 
