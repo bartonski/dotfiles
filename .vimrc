@@ -12,11 +12,16 @@ set background=dark
 set ls=2
 
 :set pt=<f9>
-nmap <F5> <C-W><C-W>
-nmap <F7> [czz
-nmap <F8> ]czz
-nmap <F2> do
-nmap <F3> dp
+" Toggle windows with F5
+nnoremap <F5> <C-W><C-W>
+nnoremap <F7> [czz
+nnoremap <F8> ]czz
+" Diffput with F3
+nnoremap <F3> dp
+" Toggle relative line numbering with F2
+nnoremap <F2> :set relativenumber!<CR>
+" Control-U => upper case word.
+nnoremap <c-u> viwU
 
 " Only do this part when compiled with support for autocommands. 
 if has("autocmd") 
@@ -45,5 +50,8 @@ command! FormatXML call DoFormatXML()
     autocmd FileType ruby,eruby,yaml set ai sw=2 sts=2 et
   augroup END
 
-execute pathogen#infect()
+
+if filereadable( $HOME . "/.vim/autoload/pathogen.vim" )
+    execute pathogen#infect()
+endif
 
