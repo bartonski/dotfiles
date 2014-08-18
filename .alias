@@ -7,7 +7,43 @@
 # 2010-11-16   Barton Chittenden       Integrated commands from various machines.
 ################################################################################
 
-export ARCHIVE='$HOME/archive'
+################################################################################
+# SHELL VARIABLES
+################################################################################
+
+## ABSTRACT EXECUTABLE VARIABLES ###############################################
+# All of these should set defaults, but allow the use of variables that
+# are already defined.
+
+## $OPEN_FILE takes a file name or directory as an argument.
+##   Directories should be opened in a task manager,
+##   Files should be opened by mime type or extension.
+## There should probably be some checks done here to see if
+##   the shell is interactive and has access to the desktop
+##   e.g. checking $DISPLAY if running under X.
+case "$OSTYPE" in
+  darwin*)  _alias_open_list="open";; 
+  *)        _alias_open_list="xdg-open gnome-open kde-open";; 
+esac
+
+for _alias_open_file in $_alias_open_list
+do
+    which "$_alias_open_file" > /dev/null && break;
+done
+
+export OPEN_FILE=${OPEN_FILE:-"$(which \"$_alias_open_file\")"
+
+## $MARKDOWN should accept a markdown formatted text file as input,
+##   and write html to stdout.
+${MARKDOWN:="pandoc -f markdown+grid_tables"}
+export MARKDOWN
+
+## DIRECTORY VARIABLES #########################################################
+${PDF_DIR:="$HOME/PDF"}
+export PDF_DIR
+
+${ARCHIVE:="$HOME/archive"}
+export ARCHIVE
 
 ################################################################################
 # ruler ()
@@ -134,7 +170,7 @@ slice() { cut -c$((${#1}+1))-; }
 
 alias s3='sqlite3'
 
-alias browse='gnome-open .'
+alias browse="$OPEN_FILE ."
 
 ## Create a text box around a quoted string.
 box() { t="$1xxxx";c=${2:-=}; echo ${t//?/$c}; echo "$c $1 $c"; echo ${t//?/$c}; }
@@ -151,14 +187,15 @@ addtemp() { echo "$@" >> $HOME/.bashtemprc; }
 alias addtmp='addtemp'
 
 ## Grep process list
-psg() { ps aux | egrep $@ | egrep -v "egrep $@"; }
+psg() { ps aux | egrep -- $@ | egrep -v "egrep -- $@"; }
 
 ## History grep
-hg() { history | egrep $@ | egrep -v "egrep $@"; }
+hg() { history | egrep -- $@| egrep -v "egrep -- $@"; }
 
-vimcmd() { $1 > $2 && vim $2; }
+editcmd() { $1 > $2 && $EDITOR $2; }
 
-pdffile() { gnome-open $(find ~/PDF | sort -t '_' -k2n | tail -1); }
+vimcmd() { local EDITOR=$(which vim); editcmd $1 $2; }
+
 
 # use $google when DNS is down.
 export google='74.125.65.104'
@@ -169,19 +206,23 @@ alias svndir='svnpath'
 
 cdl() { cd $1; ll; }
 
+fcd() { cd "$( dirname \"${1}\")";}
+
 ################################################################################
 # lastfile ()
 # Arguments: directory
 # Find the most recent file in the directory given by $1.
 ################################################################################
 lastfile() {
-    find ${1:-.} -maxdepth 1 -type f -printf "%T+ %p\n" | sort -n | tail -1 | sed 's/[^[:space:]]\+ //'
+    find "${1:-.}" -maxdepth 1 -type f -printf "%T+ %p\n" | sort -n | tail -1 | sed 's/[^[:space:]]\+ //'
 }
+
+pdffile() { $OPEN_FILE $(lastfile "$PDF_DIR"); }
 
 xmltidy() { tidy -xml -i "$@" 2> /dev/null ; }
 
 gripe() {
-    echo '-- ' $@ >> $HOME/.gripefile
+    echo "-- $(timestamp) -- " $@ >> $HOME/.gripefile
 }
 
 fifo () {
@@ -233,13 +274,11 @@ perlprint() {
     /usr/bin/enscript --no-header -d PDF -r -C --highlight=perl "$@" --color
 }
 
-alias ip="/sbin/ifconfig | egrep --color '(^[^[:blank:]]+|inet(|6))'"
-
 mkpdf() { 
     base=$1
-    vim $base.markdown
+    $EDITOR $base.markdown
     markdown2pdf -o $PDF/$base.pdf $base.markdown
-    gnome-open $PDF/$base.pdf
+    $OPEN_FILE $PDF/$base.pdf
 }
 
 freeze() {
@@ -250,8 +289,14 @@ freeze() {
     fi
 }
 
+## Given a filename containing a timestamp
+## call tstouch filename REGEX
+## where REGEX is a regular expression matching the timestamp.
+## The modification time of the file will then be changed to that timestamp.
 tstouch() { [[ $1 =~ $2 ]] && touch -t ${BASH_REMATCH[1]} $1; }
+
 alias tmux='TERM=xterm-256color tmux'
 
 # takes regex, files as arguments, returns the subroutines containing the arguments.
 grepsub() { regex=$1; shift; egrep "^sub|$regex" "$@" | grep -B1 "$regex" | grep '^sub'; }
+
