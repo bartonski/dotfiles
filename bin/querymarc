@@ -3,6 +3,8 @@
 use warnings;
 use strict;
 
+# TODO: Add perldoc
+
 # TODO: add optional argument for table; if present create entire query, 
 # a-la the 'qm' shell function:
 # 
