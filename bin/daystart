@@ -1,0 +1,17 @@
+#! /bin/sh
+
+SESSION='bywater'
+
+tmux has-session -t $SESSION
+if [ $? != 0 ]
+then
+    tmux new-session -s $SESSION -n main -d
+    tmux send-keys -t $SESSION 'irssi -c oftc' C-m
+    tmux split-window -v -t $SESSION 
+    # tmux send-keys -t $SESSION 'foo' C-m
+    # tmux send-keys -t $SESSION 'foo' C-m
+    # tmux send-keys -t $SESSION 'foo' C-m
+    # tmux send-keys -t $SESSION 'foo' C-m
+fi
+tmux attach -t $SESSION
+
