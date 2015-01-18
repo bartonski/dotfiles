@@ -22,7 +22,9 @@ nnoremap <F3> dp
 nnoremap <F2> :set relativenumber!<CR>
 " Control-U => upper case word.
 nnoremap <c-u> viwU
-
+" Search for '^ [0-9]' with F4
+nnoremap <F4> /^ [0-9]<CR>
+:
 " Only do this part when compiled with support for autocommands. 
 if has("autocmd") 
   " When editing a file, always jump to the last known cursor position. 
