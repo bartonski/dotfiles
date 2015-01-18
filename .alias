@@ -300,3 +300,8 @@ alias tmux='TERM=xterm-256color tmux'
 # takes regex, files as arguments, returns the subroutines containing the arguments.
 grepsub() { regex=$1; shift; egrep "^sub|$regex" "$@" | grep -B1 "$regex" | grep '^sub'; }
 
+# Shows which file a function is defined in.
+showfunc() { shopt -s extdebug; declare -F $1; shopt -u extdebug; }
+
+# edit executable in path.
+vimx() { $EDITOR $(which $1)  ; }
