@@ -24,7 +24,24 @@ MARKDOWN_PATH="$HOME/Documents/markdown"
 # TODO: Might want to create '$MARKDOWN_COMMAND' variable, 
 #       which could take 'markdown', 'pandoc' or
 #       other markdown program.
-BASENAME='todo' 
+# TODO: Add command line options:
+#       -e -- edit existing edit file
+#       -n -- start new edit file
+#       -l -- list last edit file
+#       -t -- create edit file with tomorrow's date -- good for running todo at the end of the day.
+#       My thought is this: if no edit file exists for a given day,
+#       create a new file for the day ( the same behaviour as '-n' )
+#       If one or more edit files exists for the day, edit the most
+#       recent ( the same as '-e' with no arguments ).
+#       If the '-n' argument is specified, an new edit file will
+#       be created, regardless of whether or not one exists for the day
+#       If -e is specified with no further arguments, the most recent 
+#       edit file is re-loaded
+#       If a file name is given after -e, that file will be used as the
+#       edit file regardless of whetehr or not it is the most recent.
+#     
+
+BASENAME="$(basename $0)"
 PREFORMAT_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).preformat"
 MARKDOWN_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).markdown"
 EDIT_FILE="$MARKDOWN_PATH/edit$(dts).txt"
@@ -74,18 +91,19 @@ set -x
     sed -i 's/copy Edit/Edit/' $items           ## Normalize report headers
     sed -i 's/\(.*[^\\]\)Edit/\n## \1/' $items  ## don't remove the newline here -- it's literal text.
     sed -i 's/\\([Ee]dit)/\t/' $items           ## Un-escape '\Edit'.
-    chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+\(Support\|Migrations\).*//'
+    chopline='s/[[:space:]]\+\+[0-9]\+[[:space:]]\+\(Support\|Migrations\|Bugs\).*//'
     add_semicolons='s|^\([[:digit:]]\+\)|\1;|'
+    change_ticket_numbers='s|^\([[:digit:]]\+\)|@rt \1|'
     change_colons='s/:/;/g'
-    escape_underscores='s/_/\\_/'
-    sed -i "$chopline; $add_semicolons; $change_colons; $escape_underscores" $items
+    escape_underscores='s/[^\]_/\\_/g'          ## Escape all un-escaped underscores.
+    sed -i "$chopline; $add_semicolons; $change_ticket_numbers; $change_colons; $escape_underscores" $items
 set +x
 }
 
 preformat() {
     local infile=$1
     local outfile=$2
-    urlify='s|^\([[:digit:]]\+\)|<a href="http://ticket.bywatersolutions.com/Ticket/Display.html?id=\1">\1</a>|g'
+    urlify='s|@rt \([[:digit:]]\+\)|<a href="http://ticket.bywatersolutions.com/Ticket/Display.html?id=\1">@rt \1</a>|g'
     sed "$urlify" $1 > $outfile
     perl -i $BIN/semicolon_to_table.pl $outfile
 }
@@ -94,11 +112,7 @@ preformat() {
 #sed -i 's/ \+[0-9]\+[[:space:]]\+Support.*//; s/^/* /; s/_/\\_/' $ITEM_FILE
 format_raw $ITEM_FILE
 
-cat $ITEM_FILE >> $EDIT_FILE
-
-printf '
-
- 8:00    ;
+printf ' 8:00    ;
  8:30    ;
  9:00    ;
  9:30    ;
@@ -121,7 +135,11 @@ printf '
  18:00   ;
  18:30   ;
  19:00   ;
- 19:30   ;' >> $EDIT_FILE 
+ 19:30   ;
+
+' >> $EDIT_FILE 
+
+consolidate_ticketlist.pl $ITEM_FILE >> $EDIT_FILE
 
 ## The following vim macros will be of great assistance when editing
 # Macro 'a': Append text of RT reminder to the end of the corresponding ticket line, then delete the reminder.
@@ -181,6 +199,8 @@ border: 1px solid black;
 </style>
 
 # $TODAY
+
+<http://ticket.bywatersolutions.com/Dashboards/596/My%20Support%20Tickets>
 
 MD
 
