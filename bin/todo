@@ -16,8 +16,10 @@
 #                           * 'My open tickets updated by someone else'
 #  OPEN_TICKETS_URL -- Url of 'Open Tickets' dashboard.
 
-dts() { date +%Y%m%d_%H.%M.%S; }
+dts="$(date +%Y%m%d_%H.%M.%S)"
 TODAY="Today: $( date +'%Y-%m-%d')"
+USER_SPECIFIED_EDIT_FILE=0
+
 # TODO: test for existence of directory set in $MARKDOWN_PATH,
 #       create it if it does not exist.
 MARKDOWN_PATH="$HOME/Documents/markdown"
@@ -41,12 +43,42 @@ MARKDOWN_PATH="$HOME/Documents/markdown"
 #       edit file regardless of whetehr or not it is the most recent.
 #     
 
+lastfile () 
+{ 
+    local directory="${1}"
+    local fileglob="${2}"
+    find "${directory}" -maxdepth 1 -type f -name "$fileglob" -printf "%T+ %p\n" | sort -n | tail -1 | sed 's/[^[:space:]]\+ //'
+}
+
+
+options=":e:lt"
+while getopts ${options} o;
+do
+    case ${o} in
+        e)
+            USER_SPECIFIED_EDIT_FILE=1
+            EDIT_FILE=${OPTARG}
+            ;;
+        l)
+            lastfile "${MARKDOWN_PATH}" 'edit*.txt'
+            exit
+            ;;
+        t)
+            dts="$(date -d 'tomorrow 00:00:00' +%Y%m%d_%H.%M.%S)"
+            TODAY="Today: $( date -d 'tomorrow 00:00:00' +'%Y-%m-%d')"
+            ;;
+        :)                
+            USER_SPECIFIED_EDIT_FILE=1
+            EDIT_FILE="$(lastfile ${MARKDOWN_PATH} 'edit*.txt')"
+    esac
+done
+
 BASENAME="$(basename $0)"
-PREFORMAT_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).preformat"
-MARKDOWN_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).markdown"
-EDIT_FILE="$MARKDOWN_PATH/edit$(dts).txt"
-ITEM_FILE="$MARKDOWN_PATH/items$(dts).txt"
-HTML_FILE="$MARKDOWN_PATH/${BASENAME}$(dts).html"
+EDIT_FILE="${EDIT_FILE:-$MARKDOWN_PATH/edit${dts}.txt}"
+ITEM_FILE="$MARKDOWN_PATH/items${dts}.txt"
+PREFORMAT_FILE="$MARKDOWN_PATH/${BASENAME}${dts}.preformat"
+MARKDOWN_FILE="$MARKDOWN_PATH/${BASENAME}${dts}.markdown"
+HTML_FILE="$MARKDOWN_PATH/${BASENAME}${dts}.html"
 PUBLIC_HTML_FILE="${BASENAME}.html"
 RT_URL="http://ticket.bywatersolutions.com"
 SUPPORT_DASHBOARD_URL="$RT_URL/Dashboards/881/Barton%20Support%20Dashboard"
@@ -77,20 +109,6 @@ open_in_browser() {
     fi
 }
 
-if [ ! -d $MARKDOWN_PATH ]
-then
-    mkdir -p $MARKDOWN_PATH
-fi
-
-open_in_browser "${SUPPORT_DASHBOARD_URL}"
-echo "Paste tickets from Support Dashboard ${SUPPORT_DASHBOARD_URL} here, the press <Control+d>"
-cat > $ITEM_FILE
-
-open_in_browser "${OPEN_TICKETS_URL}"
-echo "Paste tickets from 'Open Tickets' report here, the press <Control+d>"
-echo "## Other Tickets" >> $ITEM_FILE
-cat >> $ITEM_FILE
-
 ## Make the following changes:
 # Remove initial hash characters, except when doubled.
 # For any line containing 'copy Edit' or 'Edit', remove those words and insert a leading '##' on the line.
@@ -110,7 +128,7 @@ set -x
     add_semicolons='s|^\([[:digit:]]\+\)|\1;|'
     change_ticket_numbers='s|^\([[:digit:]]\+\)|@rt \1|'
     change_colons='s/:/;/g'
-    escape_underscores='s/[^\]_/\\_/g'          ## Escape all un-escaped underscores.
+    escape_underscores='s/\([^\]\)_/\1\\_/g'          ## Escape all un-escaped underscores.
     sed -i "$chopline; $add_semicolons; $change_ticket_numbers; $change_colons; $escape_underscores" $items
 set +x
 }
@@ -123,11 +141,31 @@ preformat() {
     perl -i $BIN/semicolon_to_table.pl $outfile
 }
 
-# TODO: turn ticket numbers into ticket URLs.
-#sed -i 's/ \+[0-9]\+[[:space:]]\+Support.*//; s/^/* /; s/_/\\_/' $ITEM_FILE
-format_raw $ITEM_FILE
+if [ ! -d $MARKDOWN_PATH ]
+then
+    mkdir -p $MARKDOWN_PATH
+fi
 
-printf ' 8:00    ;
+if [[ $USER_SPECIFIED_EDIT_FILE -eq 0 ]]
+then
+    open_in_browser "${SUPPORT_DASHBOARD_URL}"
+    echo "Paste tickets from Support Dashboard ${SUPPORT_DASHBOARD_URL} here, the press <Control+d>"
+    cat > $ITEM_FILE
+
+    open_in_browser "${OPEN_TICKETS_URL}"
+    echo "Paste tickets from 'Open Tickets' report here, the press <Control+d>"
+    echo "## Other Tickets" >> $ITEM_FILE
+    cat >> $ITEM_FILE
+
+    # TODO: turn ticket numbers into ticket URLs.
+    #sed -i 's/ \+[0-9]\+[[:space:]]\+Support.*//; s/^/* /; s/_/\\_/' $ITEM_FILE
+    format_raw $ITEM_FILE
+
+    printf '## Blockers
+
+## TODO
+
+ 8:00    ;
  8:30    ;
  9:00    ;
  9:30    ;
@@ -154,7 +192,9 @@ printf ' 8:00    ;
 
 ' >> $EDIT_FILE 
 
-consolidate_ticketlist.pl $ITEM_FILE >> $EDIT_FILE
+    consolidate_ticketlist.pl $ITEM_FILE >> $EDIT_FILE
+
+fi
 
 ## The following vim macros will be of great assistance when editing
 # Macro 'a': Append text of RT reminder to the end of the corresponding ticket line, then delete the reminder.
