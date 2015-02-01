@@ -143,7 +143,7 @@ bind '"\e[17~":"exit\n"'
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-PATH=$PATH:/usr/bin:$HOME/bin:$HOME/.rvm/bin # Add RVM to PATH for scripting
+PATH=$PATH:/usr/bin:$HOME/bin:$HOME/.rvm/bin:$HOME/altbin # Add RVM to PATH for scripting
 
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
