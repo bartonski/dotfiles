@@ -303,5 +303,17 @@ grepsub() { regex=$1; shift; egrep "^sub|$regex" "$@" | grep -B1 "$regex" | grep
 # Shows which file a function is defined in.
 showfunc() { shopt -s extdebug; declare -F $1; shopt -u extdebug; }
 
+# Wrapper around 'git add/git commit'
+# Runs git diff and edits output as commit message -- delete contents to cancel.
+checkin() {
+    local git_msg_file="/tmp/checkin.$(dts).diff.git"
+    git diff "$@" > $git_msg_file
+    if [[ -s $git_msg_file ]]
+    then
+        git add "$@"
+        git commit -F $git_msg_file
+    fi
+}
+
 # edit executable in path.
-vimx() { $EDITOR $(which $1)  ; }
+vimx() { $EDITOR $(which "$1"); checkin "$1"  ; }
