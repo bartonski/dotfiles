@@ -145,6 +145,8 @@ bind '"\e[17~":"exit\n"'
 
 PATH=$PATH:/usr/bin:$HOME/bin:$HOME/.rvm/bin:$HOME/altbin # Add RVM to PATH for scripting
 
+export MAIL=/var/spool/mail/barton
+
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
 
