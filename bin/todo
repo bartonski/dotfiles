@@ -165,6 +165,8 @@ then
 
 ## TODO
 
+## TIL ( Today I Learned ... )
+
  8:00    ;
  8:30    ;
  9:00    ;
@@ -255,7 +257,7 @@ border: 1px solid black;
 
 # $TODAY
 
-<$RT_URL/Dashboards/596/My%20Support%20Tickets>
+[My Support Tickets]($RT_URL/Dashboards/596/My%20Support%20Tickets)
 
 MD
 
