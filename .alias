@@ -74,16 +74,16 @@ range() { start=$(echo $1 | cut -d ',' -f1)
 	echo "$start-$end"; 
 }
 
-################################################################################
-# I keep a running list of projects in $HOME/.project. This command is used
-# to search through my project file.
-################################################################################
-project() {
-	echo "================================================================================"
-	touch $HOME/.project
-	egrep -i $1 $HOME/.project
-	echo "================================================================================"
-}
+# ################################################################################
+# # I keep a running list of projects in $HOME/.project. This command is used
+# # to search through my project file.
+# ################################################################################
+# project() {
+# 	echo "================================================================================"
+# 	touch $HOME/.project
+# 	egrep -i $1 $HOME/.project
+# 	echo "================================================================================"
+# }
 
 ################################################################################
 # Returns today's date in YYYYMMDD format.
@@ -308,6 +308,7 @@ showfunc() { shopt -s extdebug; declare -F $1; shopt -u extdebug; }
 checkin() {
     local git_msg_file="/tmp/checkin.$(dts).diff.git"
     git diff "$@" > $git_msg_file
+    $EDITOR $git_msg_file
     if [[ -s $git_msg_file ]]
     then
         git add "$@"

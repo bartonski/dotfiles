@@ -161,11 +161,13 @@ then
     #sed -i 's/ \+[0-9]\+[[:space:]]\+Support.*//; s/^/* /; s/_/\\_/' $ITEM_FILE
     format_raw $ITEM_FILE
 
-    printf '## Blockers
+    printf "## What's holding me back
 
-## TODO
+## What I did yesterday
 
-## TIL ( Today I Learned ... )
+## What I'm doing today
+
+## What I learned
 
  8:00    ;
  8:30    ;
@@ -192,7 +194,7 @@ then
  19:00   ;
  19:30   ;
 
-' >> $EDIT_FILE 
+" >> $EDIT_FILE 
 
     consolidate_ticketlist.pl $ITEM_FILE >> $EDIT_FILE
 

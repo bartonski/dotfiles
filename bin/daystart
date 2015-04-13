@@ -6,6 +6,11 @@ tmux has-session -t $SESSION
 if [ $? != 0 ]
 then
     tmux new-session -s $SESSION -n main -d
+    tmux send-keys -t $SESSION 'mutt' C-m
+    tmux split-window -v -t $SESSION 
+    tmux select-pane -t $SESSION -U
+    tmux resize-pane -t $SESSION -U 20 
+    tmux select-pane -t $SESSION -D
     tmux send-keys -t $SESSION 'irssi -c oftc' C-m
     tmux split-window -v -t $SESSION 
     # tmux send-keys -t $SESSION 'foo' C-m
