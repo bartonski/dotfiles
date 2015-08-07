@@ -22,6 +22,6 @@ my $column = $ARGV[1] // "marcxml";
 
 $tag = sprintf("%03d", $tag);
 my $tag_part = "//datafield[\@tag=$tag]";
-my $subfield_part = $subfield ? "/subfield[\@code=\"$subfield\"]" : "";
+my $subfield_part = $subfield || $subfield eq '0' ? "/subfield[\@code=\"$subfield\"]" : "/*";
 
 print "ExtractValue( $column, '$tag_part$subfield_part' )\n";
