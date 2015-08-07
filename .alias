@@ -318,3 +318,14 @@ checkin() {
 
 # edit executable in path.
 vimx() { $EDITOR $(which "$1"); checkin "$1"  ; }
+
+planner () 
+{ 
+    local line1='|________________________________________________________________________________|'
+    local line2='| . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .|'
+    for hh in {8..17}
+    do
+        printf "%2d:00 $line1\n\n%2d:30 $line2\n\n" ${hh} ${hh}
+    done | enscript
+}
+
