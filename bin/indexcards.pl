@@ -18,12 +18,16 @@ use strict;
 use v5.10.0;
 use File::Spec;
 
+# bar code
+# http://www.microscan.com/Barcode/idalin.asp?BARCODE=987654321&BAR_HEIGHT=1.25&CODE_TYPE=4&CHECK_CHAR=N&ROTATE=0&ST=Y&BACK_COLOUR=&FORE_COLOUR=&IMAGE_TYPE=1&DPI=59
+
 #sub cell {
 sub front {
     my $fh = shift;
     my @ticket = split ': ', shift;
     my $title = shift @ticket;
     my $subtitle = shift @ticket;
+    $subtitle //= '';
     print $fh "<td>"; 
     print $fh qq|<div class="title">$title</div>|;
     print $fh qq|<div class="subtitle">$subtitle</div>|;
@@ -63,6 +67,9 @@ sub table {
 sub head {
     my $fh = shift;
     my $filename = shift;
+    my $rows_per_page = shift;
+    my $total_height = 900;
+    my $cell_height = 600 / $rows_per_page ;
     #TODO td, th { height } should be calculated from rows per page.
     say $fh "<html>
 <head>
@@ -78,7 +85,7 @@ table,th, td {
 }
 th, td {
     width: 375px;
-    height:150px;
+    height: ${cell_height}px;
 }
 div.title {
     font-size: 22px;    
@@ -93,21 +100,29 @@ div.subtitle {
 ";
 }
 
+my @raw=();
+my $data_read = 0;
 sub get_page_data {
+    unless( $data_read ) {
+        @raw = <>;
+        $data_read = 1;
+    }
     my $rows_per_page=shift;
     my $number_of_rows_read=0;
     my $page_data = [];
 
-    READ_ROW: for my $row (1 .. $rows_per_page) {
+    READ_ROW: for my $row (1 .. $rows_per_page ) {
         my $current_row = {};
-        $current_row->{front} = <>;
-        if ( defined $current_row->{front} ) {
-            $number_of_rows_read++;
-            $current_row->{back} = <>;
-            push @$page_data, $current_row;
+        if( scalar( @raw > 1 ) ) {
+            $current_row->{front} = shift @raw;
+            $current_row->{back}  = shift @raw;
+        } elsif( scalar( @raw == 1 ) ) {
+            $current_row->{front} = shift @raw;
+            $current_row->{back}  = ': ';
         } else {
-            last READ_ROW;
+            last  READ_ROW;
         }
+        push @$page_data, $current_row;
     }
     return (scalar @$page_data == 0) ? undef : $page_data;
 }
@@ -118,14 +133,17 @@ sub main {
     my $basename='flashcard';
     my $page_counter=1;
     my $output_path="/tmp";
-    my $rows_per_page=6;
+    my $rows_per_page = 6;
+    if( scalar @ARGV == 2 ) {
+        $rows_per_page = shift @ARGV;
+    }
    
     while( my $page_data=get_page_data( $rows_per_page ) ) {
         my $filename="${basename}." . sprintf("%03d", $page_counter) . ".html";
         my $output_file=File::Spec->join($output_path, $filename );
         my $OUT_FH;
         open( $OUT_FH, '>', $output_file) or die "Cannot open '$output_file' for output: $!";
-        head( $OUT_FH, $filename );
+        head( $OUT_FH, $filename, $rows_per_page );
         body( $OUT_FH, $page_data );
         close $OUT_FH;
         $page_counter++;
