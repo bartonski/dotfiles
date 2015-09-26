@@ -19,28 +19,40 @@ use v5.10.0;
 use File::Spec;
 
 # bar code
-# http://www.microscan.com/Barcode/idalin.asp?BARCODE=987654321&BAR_HEIGHT=1.25&CODE_TYPE=4&CHECK_CHAR=N&ROTATE=0&ST=Y&BACK_COLOUR=&FORE_COLOUR=&IMAGE_TYPE=1&DPI=59
+# <img src="http://www.microscan.com/Barcode/idalin.asp?BARCODE=123456&amp;BAR_HEIGHT=1.25&amp;CODE_TYPE=4&amp;CHECK_CHAR=N&amp;ROTATE=0&amp;ST=Y&amp;BACK_COLOUR=&amp;FORE_COLOUR=&amp;IMAGE_TYPE=1&amp;DPI=59"
+# <img src="http://www.microscan.com/Barcode/idalin.asp?BARCODE=123456&amp;BAR_HEIGHT=1.25&amp;CODE_TYPE=0&amp;CHECK_CHAR=N&amp;ROTATE=0&amp;ST=N&amp;BACK_COLOUR=&amp;FORE_COLOUR=&amp;IMAGE_TYPE=1&amp;DPI=38">
+
+sub barcode {
+    my $ticket_number = shift;
+    return '' unless defined $ticket_number;
+    return qq|<img src="http://www.microscan.com/Barcode/idalin.asp?BARCODE=$ticket_number&BAR_HEIGHT=0.75&CODE_TYPE=4&CHECK_CHAR=N&ROTATE=0&ST=N&BACK_COLOUR=&FORE_COLOUR=&IMAGE_TYPE=1&DPI=59" >|;
+}
 
 #sub cell {
 sub front {
     my $fh = shift;
     my @ticket = split ': ', shift;
-    my $title = shift @ticket;
+    my $firstline = shift @ticket;
     my $subtitle = shift @ticket;
-    $subtitle //= '';
-    print $fh "<td>"; 
+    my ( $ticket_number, $title ) = $firstline =~ /(\d+)\s+(.*)/;
+    $title         //= $firstline;
+    $ticket_number //= '';
+    $subtitle      //= '';
+    $title = join( ' ', $ticket_number, $title );
+    print $fh "<td>";
     print $fh qq|<div class="title">$title</div>|;
     print $fh qq|<div class="subtitle">$subtitle</div>|;
     print $fh join( "<br />", @ticket );
-    print $fh "</td>\n"; 
+    print $fh barcode($ticket_number);
+    print $fh "</td>\n";
 }
 
 sub back {
     my $fh = shift;
     my @ticket = split ': ', shift;
-    print $fh "<td>"; 
+    print $fh "<td>";
     print $fh join( "<br />", @ticket );
-    print $fh "</td>\n"; 
+    print $fh "</td>\n";
 }
 
 sub body {
@@ -57,8 +69,8 @@ sub table {
     say( $fh "<table>");
     foreach my $row ( @$page_data ) {
         say( $fh "<tr>");
-        front(  $fh, $row->{front} ); 
-        front(  $fh, $row->{back} ) if ( defined $row->{back} ); 
+        front(  $fh, $row->{front} );
+        front(  $fh, $row->{back} ) if ( defined $row->{back} );
         say( $fh "</tr>");
     }
     say  $fh "</table>";
@@ -88,11 +100,11 @@ th, td {
     height: ${cell_height}px;
 }
 div.title {
-    font-size: 22px;    
+    font-size: 22px;
     font-weight: 900;
 }
 div.subtitle {
-    font-size: 18px;    
+    font-size: 18px;
     font-weight: 900;
 }
 </style>
@@ -137,7 +149,7 @@ sub main {
     if( scalar @ARGV == 2 ) {
         $rows_per_page = shift @ARGV;
     }
-   
+
     while( my $page_data=get_page_data( $rows_per_page ) ) {
         my $filename="${basename}." . sprintf("%03d", $page_counter) . ".html";
         my $output_file=File::Spec->join($output_path, $filename );
