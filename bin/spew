@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+use Modern::Perl;
+
+use Inline Spew => <<'GRAMMAR';
+START: article adjective noun verb adverb
+article: "The " | "A "
+adjective: "green " | "slow " | "fast " | "huge " | "flummoxed " | "itty-bitty " | "pompous " | "bombastic " | "brobdingnagian "
+noun: "dog " | "cat " | "rat " | "hippo " | "Hobbledehoy " | "jackanape " | "panjandrum " | "tauntaun " | "wooly-boooger " | "dianoga "
+verb: "eats " | "sleeps " | "juggles " | "creeps " | "daydreams " | "dives " | "blubbers " | "doodles " | "giggles " | "skedaddles " | "absquatulates "
+adverb: "badly" | "well" | "loudly" | "widdershins" | "affectionately" | "agreeably" | "bitterly" | "charmingly"
+GRAMMAR
+
+say spew();
