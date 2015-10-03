@@ -155,3 +155,9 @@ stty start undef
 
 PERL_MB_OPT="--install_base \"/home/barton/perl5\""; export PERL_MB_OPT;
 PERL_MM_OPT="INSTALL_BASE=/home/barton/perl5"; export PERL_MM_OPT;
+export PATH="$HOME/git-bz:$PATH"
+
+if [ -e ~/.local/share/kohabz ]
+then
+    source  ~/.local/share/kohabz
+fi
