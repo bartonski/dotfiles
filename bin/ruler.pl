@@ -1,11 +1,6 @@
 #! /usr/bin/perl -w
 
-#require Term::ReadKey;
-#use Term::ReadKey;
-#my ($wchar, $hchar, $wpixels, $hpixels);
-#($wchar, $hchar, $wpixels, $hpixels) = GetTerminalSize();
-
-$wchar = $ARGV[0];
+my $wchar = $ARGV[0];
 
 my $i;
 
