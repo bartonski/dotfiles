@@ -59,3 +59,12 @@ if filereadable( $HOME . "/.vim/autoload/pathogen.vim" )
     execute pathogen#infect()
 endif
 
+function! DoDayNote()
+    %s/\s\+\(open\|onhold\|closed\|resolved\)\s\+\(Support\|Reports\|Development\|Systems\|Bugs\).*//
+    %s/\n\d\+\s\+\(weeks\|hours\|days\)\s\+\(ago\s\+\)*/ -- /
+    g/^#\s\+Subject/d
+    g/^Ticket\s\+Reminder/d
+    %s/^My/My/
+    %s/^#*\(\<[0-9]\+\>\)[^ ]*[ ]\+/ticket \1 | UPDATED | /
+endfunction
+command! Daynote call DoDayNote()
