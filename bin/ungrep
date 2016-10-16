@@ -1,0 +1,5 @@
+#! /usr/bin/perl
+
+my $command_line = join( ' ', @ARGV );
+$command_line =~ s/^(.)/[\1]/;
+print $command_line;
