@@ -2,21 +2,41 @@
 
 SESSION='bywater'
 
+addwindow() {
+    local session="${1}"
+    local window_title="${2}"
+    local command_1="${3}"
+    local command_2="${4}"
+    tmux new-window -t $session
+    tmux split-window -v -t $session 
+    tmux select-pane -t $session -U
+    tmux send-keys -t $session "$command_1" C-m
+    tmux select-pane -t $session -D
+    tmux send-keys -t $session "$command_2" C-m
+    tmux rename-window -t $session $window_title
+}
+
 tmux has-session -t $SESSION
-if [ $? != 0 ]
+if [ $? = 0 ]
 then
-    tmux new-session -s $SESSION -n main -d
+    tmux attach -t $SESSION
+else
+    set -x
+    tmux -u new-session -s $SESSION -n main -d
+    sleep 1
+    tmux split-window -v -t $SESSION 
+    tmux select-pane -t $SESSION -U
+    tmux send-keys -t $SESSION 'irssi -c oftc' C-m
+    #tmux send-keys -t $SESSION 'weechat' C-m
     #tmux send-keys -t $SESSION 'mutt' C-m
     #tmux split-window -v -t $SESSION 
-    tmux select-pane -t $SESSION -U
-    tmux resize-pane -t $SESSION -U 20 
     tmux select-pane -t $SESSION -D
-    tmux send-keys -t $SESSION 'irssi -c oftc' C-m
-    tmux split-window -v -t $SESSION 
-    # tmux send-keys -t $SESSION 'foo' C-m
-    # tmux send-keys -t $SESSION 'foo' C-m
-    # tmux send-keys -t $SESSION 'foo' C-m
-    # tmux send-keys -t $SESSION 'foo' C-m
+    addwindow $SESSION "Scratch" "bash" "bash"
+    addwindow $SESSION "bwsdev" "assh bwsdev" "bash"
+    addwindow $SESSION "Eastern" "bash" "bash"
+    addwindow $SESSION "Central" "bash" "bash"
+    addwindow $SESSION "Pacific" "bash" "bash"
+    tmux attach -t $SESSION
+    set +x
 fi
-tmux attach -t $SESSION
 
