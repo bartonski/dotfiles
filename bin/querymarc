@@ -17,11 +17,27 @@ use strict;
 # 
 # ExtractValue( marcxml, '//datafield[@tag=035]/subfield[@code=\"a\"]')
 
+my %control_field = (
+      '001'    => 'controlfield'
+    , '002'    => 'controlfield'
+    , '003'    => 'controlfield'
+    , '004'    => 'controlfield'
+    , '005'    => 'controlfield'
+    , '006'    => 'controlfield'
+    , '007'    => 'controlfield'
+    , '008'    => 'controlfield'
+    , 'leader' => 'leader'
+);
+
 my ( $tag, $subfield ) = split '\$', $ARGV[0];
 my $column = $ARGV[1] // "marcxml";
+my $fieldtype = $control_field{$tag};
+
+$fieldtype ||= 'datafield';
+
 
 $tag = sprintf("%03d", $tag);
-my $tag_part = "//datafield[\@tag=$tag]";
+my $tag_part = "//$fieldtype" . "[\@tag=$tag]";
 my $subfield_part = $subfield || $subfield eq '0' ? "/subfield[\@code=\"$subfield\"]" : "/*";
 
 print "ExtractValue( $column, '$tag_part$subfield_part' )\n";
