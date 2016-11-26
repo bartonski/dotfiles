@@ -1,6 +1,8 @@
+set nocompatible
 syntax on
 colorscheme peachpuff
 filetype plugin on
+set history=5000
 set updatetime=250
 set statusline="%f%m%r%h%w [%Y] [0x%02.2B]%< %F%=%4v,%4l %3p%% of %L"
 
@@ -59,12 +61,33 @@ if filereadable( $HOME . "/.vim/autoload/pathogen.vim" )
     execute pathogen#infect()
 endif
 
+function! DoTicket()
+  for lineno in range(a:firstline, a:lastline)
+    let line = getline(lineno)
+    let line = substitute( line, '\s\+\(open\|onhold\|closed\|resolved\|needsinfo\)\s\+\(Support\|Reports\|Development\|Systems\|Bugs\|Migrations\).*', '', 'e' )
+    let line = substitute( line, '\s\+\(Support\|Reports\|Development\|Systems\|Bugs\|Migrations\)\s\+\(open\|onhold\|closed\|resolved\|needsinfo\).*', '', 'e' )
+    let line = substitute( line, '\d\+\s\+\(weeks\|hours\|days\)\s\+\(ago\s\+\)*', ' -- ', 'e' )
+    let line = substitute( line, '^#*\(\<[0-9]\+\>\)[^ ]*[ ]\+', 'ticket \1 | UPDATED | ', 'e' )
+    call setline(lineno, line)
+  endfor
+endfunction
+command! -range Ticket <line1>,<line2>call DoTicket()
+
 function! DoDayNote()
-    %s/\s\+\(open\|onhold\|closed\|resolved\)\s\+\(Support\|Reports\|Development\|Systems\|Bugs\).*//
-    %s/\n\d\+\s\+\(weeks\|hours\|days\)\s\+\(ago\s\+\)*/ -- /
+    %call DoTicket()
     g/^#\s\+Subject/d
     g/^Ticket\s\+Reminder/d
+    g/ï/d
+    g/Â/d
     %s/^My/My/
-    %s/^#*\(\<[0-9]\+\>\)[^ ]*[ ]\+/ticket \1 | UPDATED | /
+    %s/\n -- / -- /
+    g/^Barton Support Dashboard$/d
+    g/^Basics$/d
+    g/^Content$/d
+    g/^Subscription$/d
+    g/^Show$/d
+    g/^Search\.\.\.$/d
 endfunction
 command! Daynote call DoDayNote()
+
+
