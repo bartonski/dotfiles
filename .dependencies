@@ -40,3 +40,9 @@ OpenOffice::OODoc # perl library
 Text::CSV_XS      # perl library
 Time::Local       # perl library
 pathogen          # vim plugin, hard dependency
+dirname           # soft
+pbpaste           # soft, OSX only
+git               # hard
+scrot             # soft
+mtpaint           # soft
+
