@@ -108,6 +108,7 @@ alias fts='date +%Y%m%d%H%M%S'
 ################################################################################
 # Force mtr to use terminal
 ################################################################################
+# requires mtr
 alias mtr='mtr --curses'
 
 ################################################################################
@@ -124,7 +125,7 @@ dmd ()
 ## Set options for ls
 if [ $OSTYPE="linux-gnu" ]
 then
-    export LS_OPTIONS="-N --color=tty -T 0"
+    export LS_OPTIONS="-N --color=tty -T 0 "
 else
     export LS_OPTIONS=""
 fi
@@ -134,6 +135,7 @@ alias ls='/bin/ls $LS_OPTIONS'
 alias bc='bc -l'
 
 ## Sum a column of numbers
+# requires perl
 alias plsum="perl -e '\$sum=0; while(<>){\$sum+=\$_}; print \"\$sum\\n\"'"
 
 ## Yields date in YYYYMMDD format
@@ -168,6 +170,7 @@ title () {
 ## $ ls -l | slice "-rw-r--r--  "
 slice() { cut -c$((${#1}+1))-; }
 
+# requires sqlite3
 alias s3='sqlite3'
 
 alias browse="$OPEN_FILE ."
@@ -187,13 +190,14 @@ addtemp() { echo "$@" >> $HOME/.bashtemprc; }
 alias addtmp='addtemp'
 
 ## Grep process list
-psg() { ps aux | egrep -- $@ | egrep -v "egrep -- $@"; }
+psg() { ps aux | command egrep -- "$*" | egrep -v "egrep *. $*"; }
 
 ## History grep
-hg() { history | egrep -- $@| egrep -v "egrep -- $@"; }
+hg() { history | egrep -- "$*"| egrep -v "egrep *. $*"; }
 
 editcmd() { $1 > $2 && $EDITOR $2; }
 
+# requires vim
 vimcmd() { local EDITOR=$(which vim); editcmd $1 $2; }
 
 
@@ -206,6 +210,7 @@ alias svndir='svnpath'
 
 cdl() { cd $1; ll; }
 
+# requires dirname
 fcd() { cd "$( dirname \"${1}\")";}
 
 ################################################################################
@@ -219,6 +224,7 @@ lastfile() {
 
 pdffile() { $OPEN_FILE $(lastfile "$PDF_DIR"); }
 
+# requires tidy
 xmltidy() { tidy -xml -i "$@" 2> /dev/null ; }
 
 gripe() {
@@ -238,7 +244,7 @@ fifo () {
     cat > $fifo
 }
 
-
+# requires xsel or pbpaste
 sfifo () {
     local PASTE='xsel -o'
     if [ which xsel ]
@@ -259,6 +265,7 @@ sfifo () {
     $PASTE > $fifo
 }
 
+# requires jpegtopnm, pnmscale, ppmtopgm, ppmdither, potrace
 jpg2svg () {
     jpgname=$1
     base=$(echo $jpgname | sed 's/\.jpg$//i' )
@@ -266,14 +273,17 @@ jpg2svg () {
     ls -lart $base.svg 
 }
 
+# requires perl, vim
 vimgn () {
     perl -e '@F=split( ":", $ARGV[0]); system("vim +$F[1] $F[0]")' $@
 }
 
+# requires enscript
 perlprint() {
     /usr/bin/enscript --no-header -d PDF -r -C --highlight=perl "$@" --color
 }
 
+# requires markdown2pdf
 mkpdf() { 
     base=$1
     $EDITOR $base.markdown
@@ -295,6 +305,7 @@ freeze() {
 ## The modification time of the file will then be changed to that timestamp.
 tstouch() { [[ $1 =~ $2 ]] && touch -t ${BASH_REMATCH[1]} $1; }
 
+# requires tmux
 alias tmux='TERM=xterm-256color tmux'
 
 # takes regex, files as arguments, returns the subroutines containing the arguments.
@@ -305,6 +316,7 @@ showfunc() { shopt -s extdebug; declare -F $1; shopt -u extdebug; }
 
 # Wrapper around 'git add/git commit'
 # Runs git diff and edits output as commit message -- delete contents to cancel.
+# requires git
 checkin() {
     local git_msg_file="/tmp/checkin.$(dts).diff.git"
     git diff "$@" > $git_msg_file
@@ -319,7 +331,8 @@ checkin() {
 # edit executable in path.
 vimx() { $EDITOR $(which "$1"); checkin "$1"  ; }
 
-planner () 
+# requires enscript
+planner() 
 { 
     local line1='|________________________________________________________________________________|'
     local line2='| . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .|'
@@ -329,3 +342,14 @@ planner ()
     done | enscript
 }
 
+# requires xsel
+pbi() {
+    xsel | pastebinit
+}
+
+# requires scrot, mtpaint
+sshot() {
+    scrot '/tmp/screenshot.%Y-%m-%d.%H-%M-%S.png' --select --delay 5 --count 
+    lastfile /tmp
+    mtpaint "$(lastfile /tmp)";
+}

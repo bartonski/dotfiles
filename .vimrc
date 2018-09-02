@@ -1,10 +1,13 @@
 set nocompatible
+
 syntax on
 colorscheme peachpuff
 filetype plugin on
+
 set history=5000
 set updatetime=250
 set statusline="%f%m%r%h%w [%Y] [0x%02.2B]%< %F%=%4v,%4l %3p%% of %L"
+set scrolloff=10
 
 " tab settings
 set tabstop=4
@@ -14,6 +17,11 @@ set shiftwidth=4
 
 set background=dark
 set ls=2
+
+" Unicode -- see
+" https://stackoverflow.com/questions/5166652/how-to-view-utf-8-characters-in-vim-or-gvim
+set enc=utf-8
+
 
 :set pt=<f9>
 " Toggle windows with F5
@@ -60,34 +68,3 @@ command! FormatXML call DoFormatXML()
 if filereadable( $HOME . "/.vim/autoload/pathogen.vim" )
     execute pathogen#infect()
 endif
-
-function! DoTicket()
-  for lineno in range(a:firstline, a:lastline)
-    let line = getline(lineno)
-    let line = substitute( line, '\s\+\(open\|onhold\|closed\|resolved\|needsinfo\)\s\+\(Support\|Reports\|Development\|Systems\|Bugs\|Migrations\).*', '', 'e' )
-    let line = substitute( line, '\s\+\(Support\|Reports\|Development\|Systems\|Bugs\|Migrations\)\s\+\(open\|onhold\|closed\|resolved\|needsinfo\).*', '', 'e' )
-    let line = substitute( line, '\d\+\s\+\(weeks\|hours\|days\)\s\+\(ago\s\+\)*', ' -- ', 'e' )
-    let line = substitute( line, '^#*\(\<[0-9]\+\>\)[^ ]*[ ]\+', 'ticket \1 | UPDATED | ', 'e' )
-    call setline(lineno, line)
-  endfor
-endfunction
-command! -range Ticket <line1>,<line2>call DoTicket()
-
-function! DoDayNote()
-    %call DoTicket()
-    g/^#\s\+Subject/d
-    g/^Ticket\s\+Reminder/d
-    g/ï/d
-    g/Â/d
-    %s/^My/My/
-    %s/\n -- / -- /
-    g/^Barton Support Dashboard$/d
-    g/^Basics$/d
-    g/^Content$/d
-    g/^Subscription$/d
-    g/^Show$/d
-    g/^Search\.\.\.$/d
-endfunction
-command! Daynote call DoDayNote()
-
-

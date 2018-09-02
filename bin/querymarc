@@ -30,7 +30,7 @@ my %control_field = (
 );
 
 my ( $tag, $subfield ) = split '\$', $ARGV[0];
-my $column = $ARGV[1] // "marcxml";
+my $column = $ARGV[1] // "metadata";
 my $fieldtype = $control_field{$tag};
 
 $fieldtype ||= 'datafield';

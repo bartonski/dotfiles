@@ -90,10 +90,14 @@ export EDITOR=/usr/bin/vi
 
 export HISTSIZE=10000
 export HISTFILESIZE=20000
-export HISTCONTROL=erasedups
+export HISTCONTROL=erasedups:ignorespace
 
 # append to the history file, don't overwrite it
 shopt -s histappend
+
+# Literal history -- multi-line commands not smushed together joined by ';'.
+shopt -s lithist
+
 export HISTTIMEFORMAT="%h/%d - %H:%M:%S "
 export HOSTFILE="$HOME/.hosts"
 if which xsel > /dev/null

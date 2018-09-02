@@ -32,7 +32,7 @@ else
     #tmux split-window -v -t $SESSION 
     tmux select-pane -t $SESSION -D
     addwindow $SESSION "Scratch" "bash" "bash"
-    addwindow $SESSION "bwsdev" "assh bwsdev" "bash"
+    addwindow $SESSION "bwsdev" "bash" "bash"
     addwindow $SESSION "Eastern" "bash" "bash"
     addwindow $SESSION "Central" "bash" "bash"
     addwindow $SESSION "Pacific" "bash" "bash"

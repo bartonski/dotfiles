@@ -1,0 +1,35 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+use Scalar::Util qw(looks_like_number);
+
+sub meter {
+    my $percent = shift;
+    
+    my $pointer = ( (abs $percent)  < 5) 
+                ?  '' : (  (abs $percent)  < 10 ) 
+                ?  '|' : (  (abs $percent) < 95 )
+                ?  '>|'  : '>' ;
+
+    my $bars = (  (abs $percent)/5 ) - length( $pointer );
+
+    my $dots=20 - $bars - length( $pointer );
+
+    my $meter = "|" . "=" x $bars . $pointer . "." x $dots . "|";
+    if ( $percent < 0 ) {
+        $meter =~ s/>/</;
+        $meter = reverse( $meter );
+    }
+    return $meter;
+}
+
+my $label = 'Coffee';
+
+unless ( looks_like_number( $ARGV[0] ) ) {
+    $label = shift @ARGV;
+}
+
+my $per_c = $ARGV[0];
+
+print "$label: " . meter( $per_c ) . "  $per_c %\n";
