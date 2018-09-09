@@ -1,6 +1,0 @@
-set colsep '|'
-set pagesize 0
-set long 10000
-set longchunksize 10000
-set linesize 10000
-

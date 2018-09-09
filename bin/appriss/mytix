@@ -1,6 +1,0 @@
-#! /bin/sh
-(
- $HOME/bin/runsql proditsm itsm_change; \
- $HOME/bin/runsql proditsm itsm_incident_tasks | sed 's/I:[ \t]\+/I:/'; \
- $HOME/bin/runsql proditsm itsm_problem | sed 's/P:[ \t]\+/P:/'\
-) | less

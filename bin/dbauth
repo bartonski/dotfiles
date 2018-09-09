@@ -1,5 +1,0 @@
-#!/bin/sh
-# sends database credentials stored in $HOME/.dbauth to stdout.
-# $HOME/.dbauth should contain a single line with the format 
-# 'username/password' and have the permissions "-rw-------".
-cat $HOME/.dbauth

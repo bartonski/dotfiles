@@ -1,5 +1,0 @@
-RECORD_TYPE=$1
-START=$2
-LENGTH=$3
-END=$(($START+$LENGTH-1))
-grep "^$RECORD_TYPE" *.sav | cut -d ':' -f2 #| cut -c $START-$END

@@ -1,8 +1,0 @@
-#! /bin/bash
-datapath=$1
-trnfile=$2
-(
-cd $HOME/development/ruby/document_section2
-ruby $HOME/development/ruby/document_section2/yy_test.rb "      " $datapath $trnfile
-) || echo "$HOME/development/ruby/document_section2/yy_test.rb failed, datapath = $datapath, trnfile=$trnfile"
-

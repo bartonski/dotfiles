@@ -1,2 +1,0 @@
-#!/bin/sh
-runsql proditsm itsm_tasks | sed -e 's/^\(Change\|Incident\|Problem\)/====\1/' > $tmp/tasks.$(dts).txt
