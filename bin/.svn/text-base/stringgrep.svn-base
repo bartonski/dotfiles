@@ -1,2 +1,0 @@
-md5sum "$i"
-strings "$1" | grep "$2"

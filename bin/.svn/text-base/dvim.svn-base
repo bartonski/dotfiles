@@ -1,5 +1,0 @@
-timestamp=`date +%y%b%d-%H.%M.%S`
-vim ${1}.${timestamp}
-cksum ${1}.${timestamp} >> ${1}.mark
-vim + ${1}.mark
-

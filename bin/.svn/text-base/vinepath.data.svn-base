@@ -1,7 +1,0 @@
-Journal Notes:
-	SVRMGR.AGENCY_CODE ac
-	       *
-ERROR at line 5:
-ORA-00942: table or view does not exist
-
-

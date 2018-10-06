@@ -1,9 +1,0 @@
-#! /usr/bin/perl
-
-use warnings;
-use strict;
-
-my $count = $ARGV[0];
-my $string = $ARGV[1];
-
-print( $string x $count );
