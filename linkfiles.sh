@@ -1,18 +1,15 @@
 #! /bin/sh
 
 # A quick deployment script for deploying dotfiles and
-# bin/ from ~/User/. This could probably be better done
+# bin/ from ~/dotfiles/. This could probably be better done
 # using ansible.
 
 # Steps have been taken to back up files so
 # the script doesn't overwrite anything, but
-# this hasn't been extensively tested. The backups
-# should be versioned, for instance, and
-# an existing ~/bin directory won't get
+# this hasn't been extensively tested.
+# An existing ~/bin directory won't get
 # symlinked. I would suggest backing up
-# then moving ~/bin before running this,
-# then tar-balling ~/.user_dotfiles_backup
-# with a versioned file name.
+# then moving ~/bin before running this.
 
 cd $HOME
 
