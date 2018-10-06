@@ -146,7 +146,7 @@ bind '"\e[17~":"exit\n"'
 
 PATH=$PATH:/usr/bin:$HOME/bin:$HOME/altbin
 
-export MAIL=/var/spool/mail/$(USER)
+export MAIL=/var/spool/mail/${USER}
 
 stty stop undef
 stty start undef
