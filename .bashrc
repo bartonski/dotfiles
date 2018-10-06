@@ -125,13 +125,10 @@ export yellow=33
 if ( echo $HOSTNAME | grep -i 'prep' > /dev/null )
 then
 	promptcolor=$green
-	export MY_ENV_HOME=/prepfsnr/prep
 elif (echo $HOSTNAME | grep -i 'prod' > /dev/null)
 then
 	promptcolor=$red
-	export MY_ENV_HOME=/prodfsnr/prod
 else
-	export MY_ENV_HOME=/prep
 	promptcolor=$yellow
 fi
 
@@ -141,21 +138,15 @@ test -s ~/.localrc && . ~/.localrc || true
 test -s ~/.bashtemprc && . ~/.bashtemprc || true
 
 # set 'less' so that it does not refresh the screen after 'less' exits.
-export LESS='FiX'
+export LESS='FRieX'
 bind '"\e[17~":"exit\n"'
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-PATH=$PATH:/usr/bin:$HOME/bin:$HOME/.rvm/bin:$HOME/altbin # Add RVM to PATH for scripting
+PATH=$PATH:/usr/bin:$HOME/bin:$HOME/altbin
 
-export MAIL=/var/spool/mail/barton
-
-### Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
+export MAIL=/var/spool/mail/$(USER)
 
 stty stop undef
 stty start undef
-
-PERL_MB_OPT="--install_base \"/home/barton/perl5\""; export PERL_MB_OPT;
-PERL_MM_OPT="INSTALL_BASE=/home/barton/perl5"; export PERL_MM_OPT;
