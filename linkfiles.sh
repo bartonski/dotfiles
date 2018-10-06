@@ -16,13 +16,15 @@
 
 cd $HOME
 
-DOTFILES_BACKUP="$HOME/.user_dotfiles_backup"
+DOTFILES_BACKUP="$HOME/.user_dotfiles_backup.$(date +%Y.%m.%d_%H.%M.%S)"
+DOTPATH=$(dirname -- "$0")
 
 if [ ! -d $DOTFILES_BACKUP ]
 then
     mkdir $DOTFILES_BACKUP
 fi
-for dotfile in $(find User/ -maxdepth 1 -type f -name '.*' )
+
+for dotfile in $(find "$DOTPATH" -maxdepth 1 -type f -name '.*' )
 do 
     BASE=$(basename $dotfile)
     if [ -e "$BASE" ]
@@ -34,5 +36,5 @@ done
 
 if [ ! -d ./bin ]
 then
-    ln -s $HOME/User/bin $HOME
+    ln -s $HOME/$DOTPATH/bin $HOME
 fi
