@@ -17,7 +17,7 @@ some useful, some not.
 - Clone `~/dotfiles` into your home directory.
 - If you have your own `~/bin` directory, you'll want to move it, then...
 
-    cd ~/dotfiles
-    ./linkfiles.sh
-
+```
+bash ~/dotfiles/linkfiles.sh
+```
 
