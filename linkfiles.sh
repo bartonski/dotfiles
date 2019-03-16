@@ -14,7 +14,7 @@
 cd $HOME
 
 DOTFILES_BACKUP="$HOME/.user_dotfiles_backup.$(date +%Y.%m.%d_%H.%M.%S)"
-DOTPATH=$(dirname -- "$0")
+DOTPATH=$HOME/dotfiles
 
 if [ ! -d $DOTFILES_BACKUP ]
 then
