@@ -11,10 +11,12 @@
 # symlinked. I would suggest backing up
 # then moving ~/bin before running this.
 
-cd $HOME
+# set -x
 
 DOTFILES_BACKUP="$HOME/.user_dotfiles_backup.$(date +%Y.%m.%d_%H.%M.%S)"
 DOTPATH=$HOME/dotfiles
+
+cd $HOME
 
 if [ ! -d $DOTFILES_BACKUP ]
 then
@@ -27,6 +29,10 @@ do
     if [ -e "$BASE" ]
     then
         mv "$BASE" $DOTFILES_BACKUP
+    fi
+    if [ -h "$BASE" ]
+    then
+        rm "$BASE"
     fi
     ln -s $(realpath $dotfile) $HOME
 done
