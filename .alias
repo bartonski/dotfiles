@@ -353,3 +353,7 @@ sshot() {
     lastfile /tmp
     mtpaint "$(lastfile /tmp)";
 }
+
+myip() {
+    echo $(curl ifconfig.me 2> /dev/null)
+}
