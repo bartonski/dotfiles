@@ -1,0 +1,19 @@
+#! /usr/bin/env perl
+use Modern::Perl;
+
+my $time_regex = qr/\d+:\d{2}\s+[AP]M/;
+
+while( <> ) {
+    chomp;
+    # remove OBJECT REPLACEMENT CHARACTER
+    s/\xbf|\xbc|\xef//g;
+    unless( /^${time_regex}$/ ) {
+        if( /(.*)(${time_regex})$/ ) {
+            say '';
+            say "$2";
+            say "$1";
+        } else {
+            say $_;
+        }
+    }
+}
