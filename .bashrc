@@ -100,18 +100,6 @@ shopt -s lithist
 
 export HISTTIMEFORMAT="%h/%d - %H:%M:%S "
 export HOSTFILE="$HOME/.hosts"
-if which xsel > /dev/null
-then
-    export CLIPCOPY='xsel -i'
-    export CLIPCLIPBOARD='xsel -i --clipboard'
-    export CLIPPASTE='xsel -o'
-else
-    export CLIPCOPY='pbcopy'
-    export CLIPCLIPBOARD='pbcopy'
-    export CLIPPASTE='pbpaste'
-fi
-
-test -s ~/.alias && . ~/.alias || true
 
 # Uncomment this to set bash into vi mode editing. This is probably better
 # left to .inputrc, if available.
@@ -134,8 +122,8 @@ fi
 
 export PS1="\e]0;\h \w\007 \d \t \u@\[\e[1;${promptcolor}m\]\h\[\e[0m\]: \w\n\$ "
 
-test -s ~/.localrc && . ~/.localrc || true
-test -s ~/.bashtemprc && . ~/.bashtemprc || true
+test -s ~/.localrc && source ~/.localrc || true
+test -s ~/.bashtemprc && source ~/.bashtemprc || true
 
 # set 'less' so that it does not refresh the screen after 'less' exits.
 export LESS='FRieX'
