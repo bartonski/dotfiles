@@ -357,3 +357,18 @@ sshot() {
 myip() {
     echo $(curl ifconfig.me 2> /dev/null)
 }
+
+imgsearch ()
+{
+    tmp="$*";
+    query="${tmp// /+}";
+    echo "https://www.google.com/search?q=$query&btnI=I%27m+Feeling+Lucky"
+    echo "https://www.google.com/search?tbm=isch&q=$query"
+}
+
+lucky ()
+{
+    tmp="$*";
+    query="${tmp// /+}";
+    echo "https://www.google.com/search?q=$query&btnI=I%27m+Feeling+Lucky"
+}
