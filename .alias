@@ -408,3 +408,18 @@ crashlog() {
     grep '0\.000000' -h /var/log/{syslog,kern.log} -B 20 | grep -v  '0\.000000'  -A1
 }
 
+################################################################################
+# ci
+# Check in file in a git repo. File should be in the current directory.
+# Takes the name of the file to be checked in as an argument.
+# Variables changed
+#    None
+################################################################################
+ci ()
+{
+    git diff $1 > /tmp/${1}.git.diff;
+    git add $1;
+    /usr/bin/vi /tmp/${1}.git.diff;
+    git commit $1;
+    git status
+}
