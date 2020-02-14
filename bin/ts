@@ -1,13 +1,53 @@
-read -p "Project: "
-DATE=`date +%Y%m%d%H%M%S`
-FILE="$HOME/projects/timesheets/$REPLY.$DATE.txt"
-echo -n "Project Name: $REPLY " > $FILE
-(grep $REPLY "$HOME/.project" | awk '{print $1}' >> $FILE) || echo "" >> $FILE
-for i in Site Fudge Notes
-do
-	prompt="$i: "
-	read -p "$prompt"
-	echo "$prompt $REPLY" >> $FILE
-done
-echo "==============================="
-cat $FILE
+#! /usr/bin/perl
+
+use strict;
+use Data::Dumper;
+use POSIX;
+
+my $start_time = '';
+my $end_time = '';
+my $index = 0;
+my $timesheet = [];
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+    $sec = 0;
+
+sub trim {
+    my $text = shift;
+    $text =~ s/^\s+//;
+    $text =~ s/\s+$//;
+    return $text;
+}
+
+while(<>) {
+    chomp;
+    next unless /^[ 0-9][0-9]:[0-5][0-9] - /;
+    my ($time, $logtype, $subtype, $description ) = split( '\|' );
+    $time =~ s/ - .*//;
+    $time =~ s/^ //;
+    ( $hour, $min ) = split( ':', $time );
+    my $time_t = mktime( $sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst );
+    my $prev_time_entry = $timesheet->[$index-1];
+    if( defined($prev_time_entry) ) {
+        $prev_time_entry->{end_time} = $time_t;
+    }
+    if( $logtype ) {
+        my $time_entry = {
+            start_time => $time_t,
+            end_time => '',
+            log_type => trim($logtype),
+            subtype => trim($subtype),
+            description => trim($description)
+        };
+        push @$timesheet, $time_entry;
+        $index++;
+    }
+}
+
+#print Dumper( $timesheet );
+
+print("day,log_type,subtype,description,time\n");
+for my $e ( @$timesheet ) {
+    next if( $e->{log_type} eq 'LUNCH' );
+    my $time = sprintf( "%.1f", difftime( $e->{end_time}, $e->{start_time})/3600.0  );
+    print qq($wday,"$e->{log_type}","$e->{subtype}","$e->{description}",$time\n); 
+}
