@@ -1,0 +1,28 @@
+#! /usr/bin/perl
+
+#  idrive -> /mnt/apps/
+#  jdrive -> /mnt/users/
+#  kdrive -> /mnt/vine
+#  ldrive -> /mnt/depts
+#  udrive -> /mnt/root/pub/
+#  y_drive -> /mnt/users/bchittenden/intranet/y_drive/
+
+$HOME=$ENV{HOME};
+
+if( scalar @ARGV != 0 ){
+    $PWD = $ARGV[0];
+} else {
+	$PWD = `pwd`;
+}
+
+if( $PWD =~ m|/mnt/[a-z]\b| ) {
+    $PWD =~ s|/mnt/([a-z])\b|${1}:|;
+} else {
+    $PWD =~ s|~|$HOME|;
+    my $root='//wsl$/Ubuntu-18.04';
+    $PWD =~ s|^/|$root/|;
+}
+$PWD =~ s|/|\\|g;
+
+print $PWD . "\n";
+
