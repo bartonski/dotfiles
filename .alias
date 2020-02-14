@@ -372,3 +372,39 @@ lucky ()
     query="${tmp// /+}";
     echo "https://www.google.com/search?q=$query&btnI=I%27m+Feeling+Lucky"
 }
+
+################################################################################
+# md ()
+# Render markdown.
+# Requires pandoc
+# Expects 1 or 2 arguments:
+#    markdown file (named '*.markdown' or '*.md' )
+#    html directory
+# Variables changed
+#    None
+################################################################################
+
+md () 
+{ 
+    local file="$1";
+    local base="${file%'.markdown'}"
+    base="${base%'.md'}"
+    shift
+    local htmldir="${1:-.}";
+    test -d $htmldir || mkdir $htmldir;
+    local htmlfile="$htmldir/${base}.html";
+    pandoc --ascii -f markdown+pipe_tables $file > "$htmlfile";
+    echo "$htmlfile"
+}
+
+################################################################################
+# crashlog
+# Look in syslog and kern log to see what happened just prior to the last reboot.
+# Expects no arguments.
+# Variables changed
+#    None
+################################################################################
+crashlog() {
+    grep '0\.000000' -h /var/log/{syslog,kern.log} -B 20 | grep -v  '0\.000000'  -A1
+}
+
