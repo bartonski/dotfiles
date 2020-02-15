@@ -21,6 +21,7 @@
 ## There should probably be some checks done here to see if
 ##   the shell is interactive and has access to the desktop
 ##   e.g. checking $DISPLAY if running under X.
+
 case "$OSTYPE" in
   darwin*)  _alias_open_list="open";; 
   *)        _alias_open_list="xdg-open gnome-open kde-open";; 
@@ -31,18 +32,32 @@ do
     which "$_alias_open_file" > /dev/null && break;
 done
 
-export OPEN_FILE=${OPEN_FILE:-"$(which \"$_alias_open_file\")"
+OPEN_FILE="$(which "$_alias_open_file")"
+export OPEN_FILE
+
+## Probably need to test using a combination of $OSTYPE and 
+## which.
+if which xclip > /dev/null
+then
+    export CLIPCOPY='xclip -i'
+    export CLIPCLIPBOARD='xsel -i -selection clipboard'
+    export CLIPPASTE='xclip -o'
+else
+    export CLIPCOPY='pbcopy'
+    export CLIPCLIPBOARD='pbcopy'
+    export CLIPPASTE='pbpaste'
+fi
 
 ## $MARKDOWN should accept a markdown formatted text file as input,
 ##   and write html to stdout.
-${MARKDOWN:="pandoc -f markdown+grid_tables"}
+MARKDOWN=${MARKDOWN:-"pandoc -f markdown+grid_tables"}
 export MARKDOWN
 
 ## DIRECTORY VARIABLES #########################################################
-${PDF_DIR:="$HOME/PDF"}
+PDF_DIR=${PDF_DIR:-"$HOME/PDF"}
 export PDF_DIR
 
-${ARCHIVE:="$HOME/archive"}
+ARCHIVE=${ARCHIVE:-"$HOME/archive"}
 export ARCHIVE
 
 ################################################################################
