@@ -438,3 +438,7 @@ ci ()
     git commit $1;
     git status
 }
+
+calc() {
+    bc <<< "${@}"
+}
