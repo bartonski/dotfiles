@@ -40,7 +40,7 @@ export OPEN_FILE
 if which xclip > /dev/null
 then
     export CLIPCOPY='xclip -i'
-    export CLIPCLIPBOARD='xsel -i -selection clipboard'
+    export CLIPCLIPBOARD='xclip -i -selection clipboard'
     export CLIPPASTE='xclip -o'
 else
     export CLIPCOPY='pbcopy'
@@ -259,15 +259,7 @@ fifo () {
     cat > $fifo
 }
 
-# requires xsel or pbpaste
 sfifo () {
-    local PASTE='xsel -o'
-    if [ which xsel ]
-    then
-        PASTE='xsel -o'
-    else
-        PASTE='pbpaste'
-    fi
     local fifo="$HOME/fifo"
     if [ ! -e $fifo ] 
     then
@@ -277,7 +269,7 @@ sfifo () {
         echo "$fifo exists, but is not a named pipe"
         return 1
     fi
-    $PASTE > $fifo
+    $CLIPPASTE > $fifo
 }
 
 # requires jpegtopnm, pnmscale, ppmtopgm, ppmdither, potrace
@@ -357,9 +349,8 @@ planner()
     done | enscript
 }
 
-# requires xsel
 pbi() {
-    xsel | pastebinit
+    $CLIPPASTE | pastebinit
 }
 
 # requires scrot, mtpaint
@@ -441,4 +432,16 @@ ci ()
 
 calc() {
     bc <<< "${@}"
+}
+
+ghurl()
+{
+    local file="$1"
+    local sedcmd='/github.com.*push/{s/^[^[:space:]]\+[[:space:]]\+//;s|git@github.com:|https://github.com/|;s/\.git.*//;p}'
+    local giturl="$( git remote -v | sed -n $sedcmd )"
+    if [ -z $file ]; then
+        echo $giturl
+    else
+        echo ${giturl}/blob/master/${file}
+    fi
 }
