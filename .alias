@@ -444,3 +444,14 @@ ghurl()
         echo ${giturl}/blob/master/${file}
     fi
 }
+
+example ()
+{
+    echo "EXAMPLE:";
+    echo;
+    echo " $@";
+    echo;
+    echo "OUTPUT:";
+    echo;
+    eval "$@" | sed 's/^/ /'
+}
