@@ -2,7 +2,7 @@
 # .alias -- a series aliases and shell functions which act as shortcuts for
 #           commands often used at Appriss.
 # Version: 1.2
-# Date:        Name:                   Description: 
+# Date:        Name:                   Description:
 # 2009-08-14   Barton Chittenden       Initial Version
 # 2010-11-16   Barton Chittenden       Integrated commands from various machines.
 ################################################################################
@@ -23,8 +23,8 @@
 ##   e.g. checking $DISPLAY if running under X.
 
 case "$OSTYPE" in
-  darwin*)  _alias_open_list="open";; 
-  *)        _alias_open_list="xdg-open gnome-open kde-open";; 
+  darwin*)  _alias_open_list="open";;
+  *)        _alias_open_list="xdg-open gnome-open kde-open";;
 esac
 
 for _alias_open_file in $_alias_open_list
@@ -35,7 +35,7 @@ done
 OPEN_FILE="$(which "$_alias_open_file")"
 export OPEN_FILE
 
-## Probably need to test using a combination of $OSTYPE and 
+## Probably need to test using a combination of $OSTYPE and
 ## which.
 if which xclip > /dev/null
 then
@@ -78,15 +78,15 @@ ruler ()
 # Converts a comma separated pair of arguments, and prints a range between the
 # start and calculated end positions.
 # Expects 2 arguments:
-#    start-position 
-#    length         
+#    start-position
+#    length
 # Variables changed
 #    None
 ################################################################################
 range() { start=$(echo $1 | cut -d ',' -f1)
 	len=$(echo $1 | cut -d ',' -f2)
 	end=$(echo "$start + $len - 1" | bc)
-	echo "$start-$end"; 
+	echo "$start-$end";
 }
 
 # ################################################################################
@@ -131,8 +131,8 @@ alias mtr='mtr --curses'
 # the name of the directory where you want to create the directory as an
 # argument. If no argument is given, creates directory in current directory.
 ################################################################################
-dmd () 
-{ 
+dmd ()
+{
     ( if [ "$1"x != "x" ]; then cd "$1"; fi
         mkdir $(dts) )
 }
@@ -157,14 +157,14 @@ alias plsum="perl -e '\$sum=0; while(<>){\$sum+=\$_}; print \"\$sum\\n\"'"
 mydate=$(date +%Y%m%d)
 
 ## list given directory in reverse-time  order
-ll () { 
+ll () {
     if [ $OSTYPE="linux-gnu" ]
     then
         TIME_STYLE='--time-style=+"%Y-%m-%d %H:%M:%S"'
     else
         TIME_STYLE=''
     fi
-    ls -lart "$TIME_STYLE" "$@"; 
+    ls -lart "$TIME_STYLE" "$@";
 }
 
 past () { ll "$@"; echo "'past' is deprecated, use 'll' instead."; }
@@ -248,7 +248,7 @@ gripe() {
 
 fifo () {
     local fifo="$HOME/fifo"
-    if [ ! -e $fifo ] 
+    if [ ! -e $fifo ]
     then
         mkfifo $fifo
     elif [ ! -p $fifo ]
@@ -261,7 +261,7 @@ fifo () {
 
 sfifo () {
     local fifo="$HOME/fifo"
-    if [ ! -e $fifo ] 
+    if [ ! -e $fifo ]
     then
         mkfifo $fifo
     elif [ ! -p $fifo ]
@@ -277,7 +277,7 @@ jpg2svg () {
     jpgname=$1
     base=$(echo $jpgname | sed 's/\.jpg$//i' )
     jpegtopnm $jpgname | pnmscale 2 | ppmtopgm | ppmdither -dim 2 | potrace -s -o $base.svg
-    ls -lart $base.svg 
+    ls -lart $base.svg
 }
 
 # requires perl, vim
@@ -291,7 +291,7 @@ perlprint() {
 }
 
 # requires markdown2pdf
-mkpdf() { 
+mkpdf() {
     base=$1
     $EDITOR $base.markdown
     markdown2pdf -o $PDF/$base.pdf $base.markdown
@@ -338,14 +338,14 @@ checkin() {
 # edit executable in path.
 vimx() { $EDITOR $(which "$1"); checkin "$1"  ; }
 
-planner() 
-{ 
+planner()
+{
     local line1='|________________________________________________________________________________|'
     local line2='| . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .|'
     for hh in {8..17}
     do
         printf "%2d:00 $line1\n\n%2d:30 $line2\n\n" ${hh} ${hh}
-    done 
+    done
 }
 
 pbi() {
@@ -354,7 +354,7 @@ pbi() {
 
 # requires scrot, mtpaint
 sshot() {
-    scrot '/tmp/screenshot.%Y-%m-%d.%H-%M-%S.png' --select --delay 5 --count 
+    scrot '/tmp/screenshot.%Y-%m-%d.%H-%M-%S.png' --select --delay 5 --count
     lastfile /tmp
     mtpaint "$(lastfile /tmp)";
 }
@@ -389,8 +389,8 @@ lucky ()
 #    None
 ################################################################################
 
-md () 
-{ 
+md ()
+{
     local file="$1";
     local base="${file%'.markdown'}"
     base="${base%'.md'}"
