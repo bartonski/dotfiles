@@ -48,6 +48,24 @@ else
     export CLIPPASTE='pbpaste'
 fi
 
+## DATE VARIABLES ##############################################################
+## I find the date formatting strings (i.e. date "+..." formats) impossible to
+## remember; these variables follow yyyy-mm-dd HH:MM:SS, for the most part.
+
+export yy='%y'
+export yyyy='%Y'
+export mm='%m'
+export dd='%d'
+export HH12='%I'
+export HH='%H'
+export MM='%M'
+export SS='%S'
+export UNIXTIME='%s'
+export JULIAN='%j'
+export AMPM='%P'
+export ampm='%p'
+
+
 ## $MARKDOWN should accept a markdown formatted text file as input,
 ##   and write html to stdout.
 MARKDOWN=${MARKDOWN:-"pandoc -f markdown+grid_tables"}
