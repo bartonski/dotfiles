@@ -127,6 +127,11 @@ alias fts='date +%Y%m%d%H%M%S'
 alias mtr='mtr --curses'
 
 ################################################################################
+# Fix common typo
+################################################################################
+alias gti='git'
+
+################################################################################
 # Create a directory named with the current date in YYYYMMDD format. Takes
 # the name of the directory where you want to create the directory as an
 # argument. If no argument is given, creates directory in current directory.
@@ -207,8 +212,11 @@ alias addtmp='addtemp'
 ## Grep process list
 psg() { ps aux | command egrep -- "$*" | egrep -v "egrep *. $*"; }
 
-## History grep
-hg() { history | egrep -- "$*"| egrep -v "egrep *. $*"; }
+## Grep history
+hg() { history | egrep -- "$*" | egrep -v "egrep *. $*"; }
+
+## Grep set
+sg() { set | egrep -- "$*|\(\)" | egrep -B1 "$*"; }
 
 editcmd() { $1 > $2 && $EDITOR $2; }
 
@@ -435,13 +443,14 @@ calc() {
 
 ghurl()
 {
-    local file="$1"
+    local file="{$1}"
+    rel_file="$(git ls-files --full-name $1)"
     local sedcmd='/github.com.*push/{s/^[^[:space:]]\+[[:space:]]\+//;s|git@github.com:|https://github.com/|;s/\.git.*//;p}'
     local giturl="$( git remote -v | sed -n $sedcmd )"
     if [ -z $file ]; then
         echo $giturl
     else
-        echo ${giturl}/blob/master/${file}
+        echo ${giturl}/blob/master/${rel_file}
     fi
 }
 
