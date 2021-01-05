@@ -142,6 +142,7 @@ export PS1="\e]0;\h \w\007 \d \t \u@\[\e[1;${promptcolor}m\]\h\[\e[0m\]: \w\n\$ 
 
 test -s ~/.localrc && source ~/.localrc || true
 test -s ~/.bashtemprc && source ~/.bashtemprc || true
+test -s ~/.platformrc && source ~/.platformrc || true
 
 # set 'less' so that it does not refresh the screen after 'less' exits.
 export LESS='FRieX'
