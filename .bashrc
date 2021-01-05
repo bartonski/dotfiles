@@ -44,6 +44,24 @@ case "$TERM" in
     xterm-color) color_prompt=yes;;
 esac
 
+# If ssh-agent is not running, start it.
+# from https://unix.stackexchange.com/a/217223/16960
+
+# Remove stale socket file, because /tmp doesn't live
+# in memory under WSL
+if pgrep -c ssh-agent > /dev/null ; then
+    if [ ! -S ~/.ssh/ssh_auth_sock ]; then
+        rm $(readlink ~/.ssh/ssh_auth_sock)
+    fi
+fi
+
+if [ ! -S ~/.ssh/ssh_auth_sock ]; then
+  eval `ssh-agent`
+  ln -sf "$SSH_AUTH_SOCK" ~/.ssh/ssh_auth_sock
+fi
+export SSH_AUTH_SOCK=~/.ssh/ssh_auth_sock
+ssh-add -l > /dev/null || ssh-add
+
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
