@@ -7,22 +7,29 @@
 #  udrive -> /mnt/root/pub/
 #  y_drive -> /mnt/users/bchittenden/intranet/y_drive/
 
-$HOME=$ENV{HOME};
+my $HOME=$ENV{HOME};
+my $PWD=$ENV{PWD};
 
 if( scalar @ARGV != 0 ){
-    $PWD = $ARGV[0];
+    $PATH = $ARGV[0];
 } else {
-	$PWD = `pwd`;
+	$PATH = $PWD;
 }
 
-if( $PWD =~ m|/mnt/[a-z]\b| ) {
-    $PWD =~ s|/mnt/([a-z])\b|${1}:|;
+if( $PATH =~ m|^\./| ) {
+    $PATH =~ s|^\./|$PWD/|;
+}
+
+if( $PATH =~ m|/mnt/[a-z]\b| ) {
+    $PATH =~ s|/mnt/([a-z])\b|${1}:|;
 } else {
-    $PWD =~ s|~|$HOME|;
+    if( $PATH =~ /^~/ ) {
+        $PATH =~ s|^~|$HOME|;
+    }
     my $root='//wsl$/Ubuntu-18.04';
-    $PWD =~ s|^/|$root/|;
+    $PATH =~ s|^/|$root/|;
 }
-$PWD =~ s|/|\\|g;
+$PATH =~ s|/|\\|g;
 
-print $PWD . "\n";
+print $PATH . "\n";
 
