@@ -44,6 +44,24 @@ case "$TERM" in
     xterm-color) color_prompt=yes;;
 esac
 
+# If ssh-agent is not running, start it.
+# from https://unix.stackexchange.com/a/217223/16960
+
+# Remove stale socket file, because /tmp doesn't live
+# in memory under WSL
+if pgrep -c ssh-agent > /dev/null ; then
+    if [ ! -S ~/.ssh/ssh_auth_sock ]; then
+        rm $(readlink ~/.ssh/ssh_auth_sock)
+    fi
+fi
+
+if [ ! -S ~/.ssh/ssh_auth_sock ]; then
+  eval `ssh-agent`
+  ln -sf "$SSH_AUTH_SOCK" ~/.ssh/ssh_auth_sock
+fi
+export SSH_AUTH_SOCK=~/.ssh/ssh_auth_sock
+ssh-add -l > /dev/null || ssh-add
+
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -124,6 +142,7 @@ export PS1="\e]0;\h \w\007 \d \t \u@\[\e[1;${promptcolor}m\]\h\[\e[0m\]: \w\n\$ 
 
 test -s ~/.localrc && source ~/.localrc || true
 test -s ~/.bashtemprc && source ~/.bashtemprc || true
+test -s ~/.platformrc && source ~/.platformrc || true
 
 # set 'less' so that it does not refresh the screen after 'less' exits.
 export LESS='FRieX'

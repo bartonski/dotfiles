@@ -48,6 +48,24 @@ else
     export CLIPPASTE='pbpaste'
 fi
 
+## DATE VARIABLES ##############################################################
+## I find the date formatting strings (i.e. date "+..." formats) impossible to
+## remember; these variables follow yyyy-mm-dd HH:MM:SS, for the most part.
+
+export yy='%y'
+export yyyy='%Y'
+export mm='%m'
+export dd='%d'
+export HH12='%I'
+export HH='%H'
+export MM='%M'
+export SS='%S'
+export UNIXTIME='%s'
+export JULIAN='%j'
+export AMPM='%P'
+export ampm='%p'
+
+
 ## $MARKDOWN should accept a markdown formatted text file as input,
 ##   and write html to stdout.
 MARKDOWN=${MARKDOWN:-"pandoc -f markdown+grid_tables"}
@@ -125,6 +143,11 @@ alias fts='date +%Y%m%d%H%M%S'
 ################################################################################
 # requires mtr
 alias mtr='mtr --curses'
+
+################################################################################
+# Fix common typo
+################################################################################
+alias gti='git'
 
 ################################################################################
 # Create a directory named with the current date in YYYYMMDD format. Takes
@@ -207,8 +230,11 @@ alias addtmp='addtemp'
 ## Grep process list
 psg() { ps aux | command egrep -- "$*" | egrep -v "egrep *. $*"; }
 
-## History grep
-hg() { history | egrep -- "$*"| egrep -v "egrep *. $*"; }
+## Grep history
+hg() { history | egrep -- "$*" | egrep -v "egrep *. $*"; }
+
+## Grep set
+sg() { set | egrep -- "$*|\(\)" | egrep -B1 "$*"; }
 
 editcmd() { $1 > $2 && $EDITOR $2; }
 
