@@ -435,13 +435,14 @@ calc() {
 
 ghurl()
 {
-    local file="$1"
+    local file="{$1}"
+    rel_file="$(git ls-files --full-name $1)"
     local sedcmd='/github.com.*push/{s/^[^[:space:]]\+[[:space:]]\+//;s|git@github.com:|https://github.com/|;s/\.git.*//;p}'
     local giturl="$( git remote -v | sed -n $sedcmd )"
     if [ -z $file ]; then
         echo $giturl
     else
-        echo ${giturl}/blob/master/${file}
+        echo ${giturl}/blob/master/${rel_file}
     fi
 }
 
