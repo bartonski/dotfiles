@@ -39,5 +39,5 @@ done
 
 if [ ! -d ./bin ]
 then
-    ln -s $HOME/$DOTPATH/bin $HOME
+    ln -s $DOTPATH/bin $HOME
 fi
