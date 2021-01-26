@@ -49,13 +49,14 @@ esac
 
 # Remove stale socket file, because /tmp doesn't live
 # in memory under WSL
-if pgrep -c ssh-agent > /dev/null ; then
-    if [ ! -S ~/.ssh/ssh_auth_sock ]; then
+if [[ $(pgrep -c ssh-agent) -eq 0 ]] ; then
+    if [ -S ~/.ssh/ssh_auth_sock ]; then
         rm $(readlink ~/.ssh/ssh_auth_sock)
     fi
 fi
 
 if [ ! -S ~/.ssh/ssh_auth_sock ]; then
+  echo "launching ssh-agent" 1>&2
   eval `ssh-agent`
   ln -sf "$SSH_AUTH_SOCK" ~/.ssh/ssh_auth_sock
 fi
