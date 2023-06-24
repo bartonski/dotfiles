@@ -3,19 +3,44 @@
 use strict;
 use Data::Dumper;
 use POSIX;
+use Getopt::Long;
+use File::Spec;
+use Time::Local;
+
+my $debug = undef;
+GetOptions (
+    "d|debug" => \$debug
+);
 
 my $start_time = '';
 my $end_time = '';
 my $index = 0;
 my $timesheet = [];
-my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+my $time_t = time;
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($time_t);
     $sec = 0;
+my ($volume,$directories,$file) = File::Spec->splitpath( $ARGV[0] );
 
 sub trim {
     my $text = shift;
     $text =~ s/^\s+//;
     $text =~ s/\s+$//;
     return $text;
+}
+
+print STDERR "ARGV: " . join( " ", @ARGV ) . "\n" if $debug;
+print STDERR "file: '" . $file . "'\n" if $debug;
+print STDERR "Before date reset:\n" if $debug;
+print STDERR "time_t: $time_t\n" if $debug;
+print STDERR "year: $year month: $mon day: $mday wday: $wday\n" if $debug;
+if ( ( $year, $mon, $mday ) = ( $file =~ m/^(\d{4})(\d{2})(\d{2})/ ) ) {
+    $year -= 1900;
+    $mon -= 1;
+    print STDERR "After date reset:\n" if $debug;
+    $time_t = timelocal( $sec,$min,$hour,$mday,$mon,$year );
+    print STDERR "time_t: $time_t\n" if $debug;
+    ( $sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst ) = localtime($time_t);
+    print STDERR "year: $year month: $mon day: $mday wday: $wday\n" if $debug;
 }
 
 while(<>) {
@@ -25,10 +50,12 @@ while(<>) {
     $time =~ s/ - .*//;
     $time =~ s/^ //;
     ( $hour, $min ) = split( ':', $time );
-    my $time_t = mktime( $sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst );
+    my $time_t = timelocal( $sec,$min,$hour,$mday,$mon,$year );
     my $prev_time_entry = $timesheet->[$index-1];
     if( defined($prev_time_entry) ) {
         $prev_time_entry->{end_time} = $time_t;
+        $prev_time_entry->{end_time_human} = $time;
+print STDERR Dumper( $prev_time_entry ) if $debug;
     }
     if( $logtype ) {
         my $time_entry = {
@@ -36,6 +63,8 @@ while(<>) {
             end_time => '',
             log_type => trim($logtype),
             subtype => trim($subtype),
+            start_time_human => $time,
+            end_time_human => '',
             description => trim($description)
         };
         push @$timesheet, $time_entry;
@@ -49,5 +78,5 @@ print("day,log_type,subtype,description,time\n");
 for my $e ( @$timesheet ) {
     next if( $e->{log_type} eq 'LUNCH' );
     my $time = sprintf( "%.1f", difftime( $e->{end_time}, $e->{start_time})/3600.0  );
-    print qq($wday,"$e->{log_type}","$e->{subtype}","$e->{description}",$time\n); 
+    print qq($wday,"$e->{log_type}","$e->{subtype}","$e->{description}",$time\n);
 }
