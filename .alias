@@ -79,6 +79,20 @@ ARCHIVE=${ARCHIVE:-"$HOME/archive"}
 export ARCHIVE
 
 ################################################################################
+# checkdir ()
+# creates a directory if it does not exist.
+# takes name of directory to be checked/created
+# Variables changed
+#    None
+################################################################################
+checkdir ()
+{
+    if [ ! -d $1 ]; then
+        mkdir -p $1;
+    fi
+}
+
+################################################################################
 # ruler ()
 # prints an ascii ruler which runs the width of the terminal.
 # Does not expect any argumens.
@@ -451,6 +465,7 @@ calc() {
     bc <<< "${@}"
 }
 
+# ghurl: Github URL
 ghurl()
 {
     local file="$1"
@@ -472,4 +487,20 @@ example ()
     echo "OUTPUT:";
     echo;
     eval "$@" | sed 's/^/ /'
+}
+
+################################################################################
+# mdl ()
+# Markdown Link
+# Requires mojolicious
+# Expects 1 argument:
+#    URL to create link from.
+# Variables changed
+#    None
+################################################################################
+mdl ()
+{
+    url=$1;
+    text="$( mojo get "$url" title text | sed 's/^[[:space:]]*//g;/^$/d' )";
+    echo "[$text]($url)"
 }
